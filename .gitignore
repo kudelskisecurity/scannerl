@@ -1,0 +1,11 @@
+*.*~
+*.beam
+*.swp
+*.res
+*.dump
+ebin
+src/includes/fpmodules.hrl
+src/includes/outmodules.hrl
+src/includes/githash.hrl
+.rebar/
+scannerl
