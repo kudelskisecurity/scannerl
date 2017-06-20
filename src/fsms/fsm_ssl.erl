@@ -170,11 +170,17 @@ connecting({error, Reason}, Data) ->
   {stop, normal, Data#args{result={{error, unknown}, Reason}}}. % RESULT
 
 receiving(timeout, Data) ->
-  case ssl:recv(Data#args.socket, 0, Data#args.timeout) of
-    {ok, Packet} ->
-      handle_packet(Packet, Data);
-    {error, Reason} ->
-      {next_state, callback, Data#args{rcvreason=Reason}, 0}
+  try
+    case ssl:recv(Data#args.socket, 0, Data#args.timeout) of
+      {ok, Packet} ->
+        handle_packet(Packet, Data);
+      {error, Reason} ->
+        {next_state, callback, Data#args{rcvreason=Reason}, 0}
+    end
+  catch
+    _:_ ->
+      gen_fsm:send_event(self(), {error, ssl_proto_error}),
+      {next_state, callback, Data#args{rcvreason=ssl_proto_error}, 0}
   end.
 
 %% called by stop
