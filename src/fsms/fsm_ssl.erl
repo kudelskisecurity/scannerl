@@ -175,6 +175,7 @@ receiving(timeout, Data) ->
       {ok, Packet} ->
         handle_packet(Packet, Data);
       {error, Reason} ->
+        gen_fsm:send_event(self(), {error, Reason}),
         {next_state, callback, Data#args{rcvreason=Reason}, 0}
     end
   catch
