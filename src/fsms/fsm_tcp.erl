@@ -14,7 +14,7 @@
 -export([connecting/2, callback/2]).
 
 % see http://erlang.org/doc/man/inet.html#setopts-2
--define(COPTS, [binary, {packet, 0}, inet,{recbuf, 65536}, {active, false}, {reuseaddr, true}]).
+-define(COPTS, [binary, {packet, 0}, inet, {recbuf, 65536}, {active, false}, {reuseaddr, true}]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% debug
