@@ -22,7 +22,7 @@
 -export([connecting/2, receiving/2, callback/2]).
 
 % see http://erlang.org/doc/man/inet.html#setopts-2
--define(COPTS, [binary, {packet, 0}, inet,{recbuf, 65536}, {active, false}, {reuseaddr, true}]).
+-define(COPTS, [binary, {packet, 0}, inet, {recbuf, 65536}, {active, false}, {reuseaddr, true}]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% debug
@@ -175,11 +175,10 @@ receiving(timeout, Data) ->
       {ok, Packet} ->
         handle_packet(Packet, Data);
       {error, Reason} ->
-        gen_fsm:send_event(self(), {error, Reason}),
         {next_state, callback, Data#args{rcvreason=Reason}, 0}
     end
   catch
-    _:_ ->
+    _Err:_Exc ->
       gen_fsm:send_event(self(), {error, ssl_proto_error}),
       {next_state, callback, Data#args{rcvreason=ssl_proto_error}, 0}
   end.
@@ -243,11 +242,12 @@ handle_packet(Packet, Data) ->
 code_change(_Prev, State, Data, _Extra) ->
   {ok , State, Data}.
 handle_sync_event(_Ev, _From, _State, Data) ->
-  {stop, unexpectedSyncEvent, Data}.
+  {stop, unexpectedSyncEvent, Data#args{result={{error, unknown}, unexpectedSyncEvent}}}.
 handle_event(_Ev, _State, Data) ->
-  {stop, unexpectedEvent, Data}.
+  {stop, unexpectedEvent, Data#args{result={{error, unknown}, unexpectedEvent}}}.
 handle_info({ssl_closed, _Socket}, _State, Data)  ->
-  {stop, normal, Data};
+  % called when ssl socket is abruptly closed
+  {stop, normal, Data#args{result={{error, up}, ssl_closed}}};
 handle_info(_Ev, _State, Data)  ->
-  {stop, unexpectedEvent, Data}.
+  {stop, unexpectedEvent, Data#args{result={{error, up}, unexceptedEvent2}}}.
 
