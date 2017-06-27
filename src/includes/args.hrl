@@ -48,7 +48,7 @@
     payload = << >>, % the payload to send
     socket,          % socket used to connect
     nbpacket,        % amount of packets to wait for
-    result,          % the result data
+    result={{error,unknown},fsm_issue},          % the result data
     sndreason,       % the reason when sending
     rcvreason,       % the reason when receiving
     % ----------------------------------------------------------------------
