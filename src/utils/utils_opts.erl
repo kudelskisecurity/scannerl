@@ -435,11 +435,11 @@ add_file_to_list([H|T], Acc) ->
       usage()
   end.
 
-% tokenizer than handles escape char
+% tokenizer that handles escape char
 tok([$\\|Rest], Token, Acc) ->
   tok(tl(Rest), Token, [hd(Rest)|Acc]);
 tok([H|T], Token, Acc) ->
-  case string:equal(H, Token) of
+  case H =:= Token of
     true ->
       [string:strip(lists:reverse(Acc))|tok(T, Token, [])];
     false ->
