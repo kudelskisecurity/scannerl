@@ -5,7 +5,7 @@
 Scannerl is a modular distributed fingerprinting engine
 implemented by [Kudelski Security](https://www.kudelskisecurity.com/).
 Scannerl can fingerprint
-many thousands of targets on a single host, but can just as easily be distributed
+thousands of targets on a single host, but can just as easily be distributed
 across multiple hosts.
 Scannerl is to fingerprinting what zmap is to port scanning.
 
@@ -18,22 +18,22 @@ the user.
 # Why use Scannerl
 
 When using conventional fingerprinting tools for large-scale analysis,
-you will often hit two limitations: first, these tools are typically built
+security researchers will often hit two limitations: first, these tools are typically built
 for scanning comparatively few hosts at a time and are inappropriate for large
-ranges of IP addresses. Second, if you’re scanning a large range of IP addresses
-that are protected by IPS devices, these defensive systems will often shut down
-your scan and leave you with an incomplete set of information.
+ranges of IP addresses. Second, if large range of IP addresses
+protected by IPS devices are being fingerprinted, the probability of being
+blacklisted is higher what could lead to an incomplete set of information.
 Scannerl is designed to circumvent these limitations, not only by providing the
 ability to fingerprint multiple hosts simultaneously, but also by distributing
 the load across an arbitrary number of hosts.
 Scannerl also makes the distribution of these tasks completely transparent,
-which makes setup and maintenance of your large-scale fingerprinting projects
-trivial; this allows you to focus on your analyses rather than the herculean
-task of managing your fingerprinting by hand.
-In addition to the speed factor, scannerl has been designed to allow you to
+which makes setup and maintenance of large-scale fingerprinting projects
+trivial; this allows to focus on the analyses rather than the herculean
+task of managing and distributing fingerprinting processes by hand.
+In addition to the speed factor, scannerl has been designed to allow to
 easily set up specific fingerprinting analyses in a few lines of code.
-Not only is your fingerprinting rig easy to set up, but you can tweak it to add
-fine-tuned scans as your fingerprinting campaigns.
+Not only is the creation of a fingerprinting cluster easy to set up, but it can be tweaked
+by adding fine-tuned scans to your fingerprinting campaigns.
 
 It is the fastest tool to perform large scale fingerprinting campaigns.
 
