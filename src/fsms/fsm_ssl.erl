@@ -248,6 +248,9 @@ handle_event(_Ev, _State, Data) ->
 handle_info({ssl_closed, _Socket}, _State, Data)  ->
   % called when ssl socket is abruptly closed
   {stop, normal, Data#args{result={{error, up}, ssl_closed}}};
-handle_info(_Ev, _State, Data)  ->
-  {stop, unexpectedEvent, Data#args{result={{error, up}, unexceptedEvent2}}}.
+handle_info({ssl_error, _Socket, {tls_alert, Err}}, _State, Data)  ->
+  % called when tls_alert
+  {stop, normal, Data#args{result={{error, up}, [tls_alert, Err]}}};
+handle_info(Ev, _State, Data)  ->
+  {stop, normal, Data#args{result={{error, up}, [unexpectedEvent2, Ev]}}}.
 
