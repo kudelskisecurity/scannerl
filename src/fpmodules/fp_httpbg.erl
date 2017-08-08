@@ -23,7 +23,7 @@
 -define(TYPE, tcp). % transport type
 -define(UALEN, 2). % user-agent length
 -define(HDRKEY, "server").
--define(MAXPKT, 4).
+-define(MAXPKT, 1).
 -define(MAXREDIRECT, 3).
 -define(MAXREDIR, maxredirection).
 -define(DESCRIPTION, "TCP/80: HTTP Server header identification").
