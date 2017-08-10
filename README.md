@@ -159,6 +159,17 @@ However, it will still create a slave node on the same host it is run from.
 Therefore, the requirements described in [Distributed setup](#distributed-setup)
 must also be met.
 
+A quick way to do this is to make sure your host is able to resolve itself with
+```
+grep -q "127.0.1.1\s*`hostname`" /etc/hosts || echo "127.0.1.1 `hostname`" | sudo tee -a /etc/hosts
+```
+
+and create an SSH key (if not yet present) and add it to the `authorized_keys`:
+```
+cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+```
+
+The following example runs an HTTP banner grabing on *google.com*
 ```
 ./scannerl -m httpbg -d google.com
 ```
