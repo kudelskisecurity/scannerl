@@ -274,7 +274,7 @@ get_module_args(Opts, Id, Outs) ->
         retry=Opts#opts.retry, arguments=Opts#opts.modarg,
         checkwww=Opts#opts.checkwww, outobj=Outs, direct=Direct,
         privports=Opts#opts.privports, fsmopts=Opts#opts.fsmopts,
-        maxpkt=Opts#opts.maxpkt}.
+        maxpkt=Opts#opts.maxpkt, sockopt=Opts#opts.sockopt}.
 
 % starting the supervisor
 start_supervisor(Module, Id) ->

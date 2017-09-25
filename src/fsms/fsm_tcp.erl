@@ -94,8 +94,8 @@ get_privports(_) ->
 
 % provide the socket option
 get_options(Args) ->
-  ?COPTS ++ get_privports(Args#args.privports)
-    ++ Args#args.fsmopts.
+  utils:merge_sockopt(?COPTS ++ get_privports(Args#args.privports)
+    ++ Args#args.fsmopts, Args#args.sockopt).
 
 % State connecting is used to initiate the tcp connection
 connecting(timeout, Data) ->

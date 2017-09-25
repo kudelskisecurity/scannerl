@@ -15,6 +15,7 @@
     arguments=[],    % [optional] module arguments (list of strings)
     debugval,        % [optional] debugging value
     privports,       % [optional] use privilege ports only
+    sockopt,         % [optional] socket argument
     % ----------------------------------------------------------------------
     % module arguments
     % ----------------------------------------------------------------------

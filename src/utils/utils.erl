@@ -6,7 +6,7 @@
 -export([get_ts/0, scaninfo_print/1]).
 -export([debug_parse/1, debug_print/2, debug/4]).
 -export([outputs_init/2, outputs_clean/1, outputs_send/2]).
--export([read_lines/1]).
+-export([read_lines/1, tgt_to_string/1, merge_sockopt/2]).
 
 -include("../includes/opts.hrl").
 
@@ -87,6 +87,26 @@ scaninfo_print(Scaninfo) ->
   utils:debug(scannerl, "-------------------------", {}, Dbgval),
   utils:debug(scannerl, "", {}, Dbgval).
 
+% IP to string
+tgt_to_string(Tgt) when is_list(Tgt) ->
+  Tgt;
+tgt_to_string(Tgt) ->
+  inet_parse:ntoa(Tgt).
+
+% merge socket options
+% left, right list of options
+% where right is prefered
+merge_sockopt(Left, Right) ->
+  merge_sockopt_sub(Left, Right, Left).
+
+merge_sockopt_sub(_Left, [], Acc) ->
+  Acc;
+merge_sockopt_sub(Left, [{Key, _Value}=H|T], Acc) ->
+  N = lists:keydelete(Key, 1, Acc),
+  merge_sockopt_sub(Left, T, N++[H]);
+merge_sockopt_sub(Left, [{Key}=H|T], Acc) ->
+  N = lists:keydelete(Key, 1, Acc),
+  merge_sockopt_sub(Left, T, N++[H]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % debug

@@ -30,6 +30,7 @@
     nosafe,         % [optional] keep going even if some slaves fail
     config,         % [optional] config file if any
     msg_port,       % [optional] port to listen for message (optional)
+    sockopt,        % [optional] socket argument
     hardtimeout,    % [hidden] hardtimeout in ms
     % -------------------------------------------------------------------
     % fsm internals

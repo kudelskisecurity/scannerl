@@ -41,7 +41,7 @@
 -define(INFINITYATOM, infinity).
 
 -define(ACCEPTED_ARGS, ["m", "f", "F", "d", "D", "s", "S", "o", "p", "t", "r",
-  "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j", "h"]).
+  "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j", "h", "K"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Usage
@@ -87,6 +87,7 @@ usage() ->
   print("    -C <path> --config <path>   read arguments from file, one per line."),
   print("    -O <mode> --outmode <mode>  0: on Master, 1: on slave, >1: on broker (default: 0)."),
   print("    -v <val> --verbose <val>    be verbose (0 <= int <= 255)."),
+  print("    -K <opt> --socket <opt>     comma separated socket option (key[:value])."),
   print("    -l --list-modules           list available fp/out modules."),
   print("    -V --list-debug             list available debug options."),
   print("    -X --priv-ports             Use only source port between 1 and 1024."),
@@ -171,6 +172,7 @@ opt_print(Opt) ->
   utils:debug(scannerl, io_lib:fwrite("Dry:         ~p", [Opt#opts.dry]), {}, Opt#opts.debugval),
   utils:debug(scannerl, io_lib:fwrite("Nosafe:      ~p", [Opt#opts.nosafe]), {}, Opt#opts.debugval),
   utils:debug(scannerl, io_lib:fwrite("Privports:   ~p", [Opt#opts.privports]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Sockopt:     ~p", [Opt#opts.sockopt]), {}, Opt#opts.debugval),
   utils:debug(scannerl, io_lib:fwrite("Debug:       ~p", [Opt#opts.debugval#debugval.value]),
     {}, Opt#opts.debugval),
   utils:debug(scannerl, io_lib:fwrite("Config file: ~p", [Opt#opts.config]), {}, Opt#opts.debugval),
@@ -351,6 +353,7 @@ optfill(Map, Mods, Version) ->
     maxchild=opt_get_integer(maps:get("P", Map, ?DEFPROCESS)),
     nosafe=opt_get_boolean(maps:get("N", Map, "false")),
     privports=opt_get_boolean(maps:get("X", Map, "false")),
+    sockopt=maps:get("K", Map, []),
     config=maps:get("k", Map, nil),
     msg_port=opt_get_integer(maps:get("M", Map, ?DEFPORT)),
     % other options
@@ -452,6 +455,25 @@ tok([], _Token, Acc) ->
 tokenize(String, Token) ->
   tok(String, hd(Token), []).
 
+% transforms a list of element in the form "key:val"
+% into a list of tuple: [{key,val},...]
+keyval_to_tuple([], Agg) ->
+  Agg;
+keyval_to_tuple([H|T], Agg) ->
+  E = string:tokens(H, ?MODARGSEP),
+  Opt = case length(E) of
+    1 ->
+            K = list_to_atom(hd(E)),
+            {K};
+    2 ->
+            K = list_to_atom(hd(E)),
+            V = list_to_atom(hd(lists:reverse(E))),
+            {K, V};
+    _ ->
+            {}
+  end,
+  keyval_to_tuple(T, Agg ++ [Opt]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the option matching functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -486,6 +508,9 @@ add_opt("j"=Key, Value, Map) ->
   end;
 add_opt("k"=Key, Value, Map) ->
   maps:put(Key, integer_to_list(1000*opt_get_integer(Value)), Map);
+add_opt("K"=Key, Value, Map) ->
+  Entries = string:tokens(Value, ?ARGSEP),
+  maps:put(Key, keyval_to_tuple(Entries, []), Map);
 add_opt("f"=Key, Value, Map) ->
   maps:put(Key, string:tokens(Value, ?ARGSEP), Map);
 add_opt("d"=Key, Value, Map) ->
@@ -549,6 +574,8 @@ add_opt("-help", Value, Map) ->
   maps:put("h", Value, Map);
 add_opt("-max-pkt", Value, Map) ->
   maps:put("j", Value, Map);
+add_opt("-socket", Value, Map) ->
+  maps:put("K", Value, Map);
 add_opt(Key, Value, Map) ->
   case lists:member(Key, ?ACCEPTED_ARGS) of
     true ->

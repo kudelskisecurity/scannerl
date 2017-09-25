@@ -6,7 +6,9 @@
 %%%   {sslcheck, true}: check the certificate validity
 %%%   {sslcheck, full}: the above plus the domain check
 %%%   {sslcheck, false}: disable ssl checking
-%%% default is "true"
+%%%   {sni, disable}: disable sni
+%%%   {sni, enable}: enable sni
+%%% defaults is erlang's defaults (http://erlang.org/doc/man/ssl.html)
 %%%
 
 -module(fsm_ssl).
@@ -99,20 +101,32 @@ doit(Args) ->
   % first let's call "connect" through "connecting" using a timeout of 0
   {ok, connecting, Args, 0}.
 
-% get sslcheck opt
-get_sslcheck([], {Acc, SSLcheck}) ->
-  {Acc, SSLcheck};
-get_sslcheck([{sslcheck, Val}|T], {Acc, _}) ->
-  get_sslcheck(T, {Acc, Val});
-get_sslcheck([H|T], {Acc, S}) ->
-  get_sslcheck(T, {Acc++[H], S}).
-
-get_ssl_opts(_Target, true) ->
-  utils_ssl:get_opts_verify([]);
-get_ssl_opts(Target, full) ->
-  utils_ssl:get_opts_verify(Target);
-get_ssl_opts(_Target, false) ->
-  utils_ssl:get_opts_noverify().
+% parse options
+parse_ssl_opts([], _Tgt, Acc) ->
+  Acc;
+parse_ssl_opts([{sslcheck, true}|T], Tgt, Acc) ->
+  % parse sslcheck
+  Opt = utils_ssl:get_opts_verify([]),
+  parse_ssl_opts(T, Tgt, Acc ++ Opt);
+parse_ssl_opts([{sslcheck, false}|T], Tgt, Acc) ->
+  % parse sslcheck
+  Opt = utils_ssl:get_opts_noverify(),
+  parse_ssl_opts(T, Tgt, Acc ++ Opt);
+parse_ssl_opts([{sslcheck, full}|T], Tgt, Acc) ->
+  % parse sslcheck
+  Opt = utils_ssl:get_opts_verify(Tgt),
+  parse_ssl_opts(T, Tgt, Acc ++ Opt);
+parse_ssl_opts([{sni, enable}|T], Tgt, Acc) ->
+  % parse sni
+  Opt = [{server_name_indication, utils:tgt_to_string(Tgt)}],
+  parse_ssl_opts(T, Tgt, Acc ++ Opt);
+parse_ssl_opts([{sni, disable}|T], Tgt, Acc) ->
+  % parse sni
+  Opt = [{server_name_indication, disable}],
+  parse_ssl_opts(T, Tgt, Acc ++ Opt);
+parse_ssl_opts([H|T], Tgt, Acc) ->
+  % parse the rest
+  parse_ssl_opts(T, Tgt, Acc ++ [H]).
 
 % get privport opt
 get_privports(true) ->
@@ -122,10 +136,13 @@ get_privports(_) ->
 
 % provide the socket option
 get_options(Args) ->
-  {Opts, SSLcheck} = get_sslcheck(Args#args.fsmopts, {[], true}),
-  ?COPTS ++ get_privports(Args#args.privports)
-    ++ get_ssl_opts(Args#args.ctarget, SSLcheck)
-    ++ Opts.
+  % opts from the module
+  Opts1 = parse_ssl_opts(Args#args.fsmopts, Args#args.ctarget, []),
+  % opts from the cli
+  Opts2 = parse_ssl_opts(Args#args.sockopt, Args#args.ctarget, []),
+  % merge all opts
+  utils:merge_sockopt(?COPTS ++ get_privports(Args#args.privports)
+    ++ Opts1, Opts2).
 
 % State connecting is used to initiate the ssl connection
 connecting(timeout, Data) ->

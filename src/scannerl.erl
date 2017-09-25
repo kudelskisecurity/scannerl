@@ -17,7 +17,7 @@
 -include("includes/opts.hrl").
 -include("includes/args.hrl").
 
--define(VERSION, "0.32").
+-define(VERSION, "0.33").
 -define(MODULES, % master module
   [
     master,                % the master module
