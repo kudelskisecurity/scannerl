@@ -225,6 +225,8 @@ rcv_loop(CntSlave, Opts, Pids) ->
 trigger_progress(false, _) ->
   ok;
 trigger_progress(true, Pids) ->
+  print(info, io_lib:fwrite("[progress][M] ~p slave(s)", [length(Pids)])),
+  global:whereis_name(scannerl) ! {progress},
   [X ! {progress} || X <- Pids].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

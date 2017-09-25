@@ -75,10 +75,12 @@ print(normal, Msg) ->
   io:put_chars(standard_error, M).
 
 progress(true, Nb, 0) ->
-  M = io_lib:fwrite("[progress] ~p match on ? fingerprinted\r", [Nb]),
+  M = io_lib:fwrite("[progress] ~p match on ? fingerprinted so far (queue_len: ~p)\n",
+    [Nb, msg_queue_len()]),
   io:put_chars(standard_error, M);
 progress(true, Nb, Tot) ->
-  M = io_lib:fwrite("[progress] ~p match on ~p fingerprinted (~.2f%)\r", [Nb, Tot, Nb*100/Tot]),
+  M = io_lib:fwrite("[progress] ~p match on ~p fingerprinted (~.2f%) so far (queue_len: ~p)\n",
+    [Nb, Tot, Nb*100/Tot, msg_queue_len()]),
   io:put_chars(standard_error, M);
 progress(false, _, _) ->
   ok.
