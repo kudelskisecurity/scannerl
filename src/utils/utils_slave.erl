@@ -15,7 +15,7 @@
 -export([start_link_th/5]).
 
 -define(BIN, "erl").
--define(REMOTE_BIN, "rsh -q -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no").
+-define(REMOTE_BIN, "ssh -q -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no").
 -define(CONNARGS, "-detached -noinput").
 -define(TCPPORT, "-kernel inet_dist_listen_min").
 -define(ARGS, "-hidden +K true -smp enable -P 134217727 -connect_all false -kernel dist_nodelay false").
