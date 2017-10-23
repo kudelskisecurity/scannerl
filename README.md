@@ -43,6 +43,13 @@ It is the fastest tool to perform large scale fingerprinting campaigns.
 
 * [Installation](#installation)
 * [Usage](#usage)
+
+  * [Standalone](#standalone-usage)
+  * [Distributed](#distributed-usage)
+  * [Available modules](#list-available-modules)
+  * [Module arguments](#modules-arguments)
+  * [Result format](#result-format)
+
 * [Extending Scannerl](#extending-scannerl)
 * [Contributing](#contributing)
 * [License and Copyright](#license-and-copyright)
@@ -52,11 +59,14 @@ It is the fastest tool to perform large scale fingerprinting campaigns.
 First install Erlang (at least v.18) by choosing the right packaging for your
 platform: [Erlang downloads](https://www.erlang-solutions.com/resources/download.html)
 
-Install the following packages:
+Install the required packages:
+```
+# on debian
+$ sudo apt install erlang erlang-src rebar
 
-* *erlang*
-* *erlang-src*
-* *rebar*
+# on arch
+$ sudo pacman -S erlang-nox rebar
+```
 
 ## Build
 
@@ -164,12 +174,13 @@ A quick way to do this is to make sure your host is able to resolve itself with
 grep -q "127.0.1.1\s*`hostname`" /etc/hosts || echo "127.0.1.1 `hostname`" | sudo tee -a /etc/hosts
 ```
 
-and create an SSH key (if not yet present) and add it to the `authorized_keys`:
+and create an SSH key (if not yet present) and add it to the `authorized_keys` (you need
+an SSH server running):
 ```
 cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 ```
 
-The following example runs an HTTP banner grabing on *google.com*
+The following example runs an HTTP banner grabing on *google.com* from localhost
 ```
 ./scannerl -m httpbg -d google.com
 ```
