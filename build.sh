@@ -2,8 +2,8 @@
 # https://github.com/kudelskisecurity/scannerl
 
 # check deps
-hash erl 2>/dev/null || { echo 'install \"erlang\" (https://github.com/kudelskisecurity/scannerl)'; exit 1; }
-hash rebar 2>/dev/null || { echo 'install \"rebar\" (https://github.com/kudelskisecurity/scannerl)'; exit 1; }
+hash erl 2>/dev/null || { echo "install \"erlang\" (https://github.com/kudelskisecurity/scannerl)"; exit 1; }
+hash rebar 2>/dev/null || { echo "install \"rebar\" (https://github.com/kudelskisecurity/scannerl)"; exit 1; }
 
 # check erlang version
 erlversion=`erl -eval 'erlang:display(list_to_integer(erlang:system_info(otp_release))), halt().'  -noshell \
