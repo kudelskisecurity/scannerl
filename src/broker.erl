@@ -6,10 +6,21 @@
 -export([scan/1]).
 -include("includes/opts.hrl").
 -include("includes/args.hrl").
+-include("includes/erlversion.hrl").
 
 % check children every CHECKTO
 -define(CHECKTO, 3000).
 -define(PROGRESS_MOD, 1000).
+
+-ifdef(USE_GENFSM).
+  -define(TCPFSM, fsm_tcp).
+  -define(UDPFSM, fsm_udp).
+  -define(SSLFSM, fsm_ssl).
+-else.
+  -define(TCPFSM, statem_tcp).
+  -define(UDPFSM, statem_udp).
+  -define(SSLFSM, statem_ssl).
+-endif.
 
 % the option for this scan
 -record(obj, {
@@ -281,11 +292,11 @@ start_supervisor(Module, Id) ->
   Args = apply(Module, get_default_args, []),
   case Args#args.type of
     tcp ->
-      scannerl_worker_sup:start_link({fsm_tcp,start_link,[]});
+      scannerl_worker_sup:start_link({?TCPFSM,start_link,[]});
     udp ->
-      scannerl_worker_sup:start_link({fsm_udp,start_link,[]});
+      scannerl_worker_sup:start_link({?UDPFSM,start_link,[]});
     ssl ->
-      scannerl_worker_sup:start_link({fsm_ssl,start_link,[]});
+      scannerl_worker_sup:start_link({?SSLFSM,start_link,[]});
     other ->
       scannerl_worker_sup:start_link({Module,start_link,[]});
     _ ->

@@ -16,8 +16,21 @@
 -author("Adrien Giner - adrien.giner@kudelskisecurity.com").
 -include("includes/opts.hrl").
 -include("includes/args.hrl").
+-include("includes/erlversion.hrl").
 
--define(VERSION, "0.33").
+-ifdef(USE_GENFSM).
+  -define(TCPFSM, fsm_tcp).
+  -define(UDPFSM, fsm_udp).
+  -define(SSLFSM, fsm_ssl).
+  -define(FSMMODE, "using genfsm").
+-else.
+  -define(TCPFSM, statem_tcp).
+  -define(UDPFSM, statem_udp).
+  -define(SSLFSM, statem_ssl).
+  -define(FSMMODE, "using statem").
+-endif.
+
+-define(VERSION, "0.34").
 -define(MODULES, % master module
   [
     master,                % the master module
@@ -35,11 +48,12 @@
     utils_fp,             % fingerprinting utils
     fp_module,
     out_behavior,
-    fsm_tcp,
-    fsm_udp,
-    fsm_ssl,
+    ?TCPFSM,
+    ?UDPFSM,
+    ?SSLFSM,
     % utilities
-    utils_http
+    utils_http,
+    utils_ssl
   ]).
 -define(SCANNERL, "scannerl").
 -define(CHECKTO, 60000). % 1 minute
@@ -95,7 +109,7 @@ print_percentage(Cnt, Tot) ->
 % output modules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 outs_init(Outs, Scaninfo, Outmode) when Outmode == 0 ->
-  print(normal, "init output module(s)"),
+  %print(normal, "init output module(s)"),
   case utils:outputs_init(Outs, Scaninfo) of
     {error, Reason} ->
       print(error, io_lib:fwrite("Output setup failed: ~p", [Reason])),
@@ -248,14 +262,17 @@ main(Args) ->
   Omods = lists:filtermap(fun(X) -> {M, _} = X, {true, M} end, maps:get("o", Map)),
   Mods = lists:append([Tmp, Omods]),
 
+  % print erlang version
+  print(normal, io_lib:fwrite("compiled with erlang ~s (~s)", [?ERLANG_VERSION, ?FSMMODE])),
+
   % fill the opt record
   Opts = utils_opts:optfill(Map, Mods, ?VERSION),
-  case Opts#opts.queuemax of
-    0 ->
-      print(normal, "max queue length: infinite");
-    Nb ->
-      print(normal, io_lib:fwrite("max queue length: ~p", [Nb]))
-  end,
+  %case Opts#opts.queuemax of
+  %  Nb ->
+  %    print(normal, io_lib:fwrite("max queue length: ~p", [Nb]))
+  %  0 ->
+  %    print(normal, "max queue length: infinite");
+  %end,
 
   % check and initialize the output modules
   Outputs = outs_init(Opts#opts.output, Opts#opts.scaninfo, Opts#opts.outmode),
