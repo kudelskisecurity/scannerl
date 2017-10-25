@@ -9,7 +9,7 @@ thousands of targets on a single host, but can just as easily be distributed
 across multiple hosts.
 Scannerl is to fingerprinting what zmap is to port scanning.
 
-Scannerl works on Debian/Ubuntu (but will probably work on
+Scannerl works on Debian/Ubuntu/Arch (but will probably work on
 other distributions as well). It uses a master/slave architecture where
 the master node will distribute the work (host(s) to fingerprint) to
 its slaves (local or remote). The entire deployment is transparent to
@@ -149,7 +149,7 @@ USAGE
     -c <cidr> --prefix <cidr>   sub-divide range with prefix > cidr (default: 24).
     -M <port> --message <port>  port to listen for message (default: 57005).
     -P <nb> --process <nb>      max simultaneous process per node (default: 28232).
-    -Q <nb> --queue <nb>        max nb unprocessed results in queue (default: infinity.
+    -Q <nb> --queue <nb>        max nb unprocessed results in queue (default: infinity).
     -C <path> --config <path>   read arguments from file, one per line.
     -O <mode> --outmode <mode>  0: on Master, 1: on slave, >1: on broker (default: 0).
     -v <val> --verbose <val>    be verbose (0 <= int <= 255).
@@ -277,8 +277,8 @@ Push them to their respective folders and insert a entries in the *SLMODULES* li
 in the *scannerl.erl* file so that they get compiled.
 Scannerl needs to be re-built if new modules are being added.
 
-Make sure new modules get listed (using the *-l* switch) and then use them with their
-respective switch (*-m* for fingerprinting module and *-o* for output modules).
+Make sure new modules get listed (using the **-l** switch) and then use them with their
+respective switch (**-m** for fingerprinting module and **-o** for output modules).
 
 # Contributing
 
