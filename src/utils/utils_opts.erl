@@ -83,7 +83,7 @@ usage() ->
   print("    -c <cidr> --prefix <cidr>   sub-divide range with prefix > cidr (default: 24)."),
   print("    -M <port> --message <port>  port to listen for message (default: 57005)."),
   print("    -P <nb> --process <nb>      max simultaneous process per node (default: 28232)."),
-  print("    -Q <nb> --queue <nb>        max nb unprocessed results in queue (default: infinity."),
+  print("    -Q <nb> --queue <nb>        max nb unprocessed results in queue (default: infinity)."),
   print("    -C <path> --config <path>   read arguments from file, one per line."),
   print("    -O <mode> --outmode <mode>  0: on Master, 1: on slave, >1: on broker (default: 0)."),
   print("    -v <val> --verbose <val>    be verbose (0 <= int <= 255)."),
