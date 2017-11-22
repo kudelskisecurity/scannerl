@@ -90,7 +90,7 @@ usage() ->
   print("    -K <opt> --socket <opt>     comma separated socket option (key[:value])."),
   print("    -l --list-modules           list available fp/out modules."),
   print("    -V --list-debug             list available debug options."),
-  print("    -X --priv-ports             Use only source port between 1 and 1024."),
+  print("    -X --priv-ports             use only source port between 1 and 1024."),
   print("    -N --nosafe                 keep going even if some slaves fail to start."),
   print("    -w --www                    DNS will try for www.<domain>."),
   print("    -b --progress               show progress."),
