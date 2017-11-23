@@ -2,7 +2,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
-Scannerl is a modular distributed fingerprinting engine
+[Scannerl](https://github.com/kudelskisecurity/scannerl) is a modular distributed fingerprinting engine
 implemented by [Kudelski Security](https://www.kudelskisecurity.com/).
 Scannerl can fingerprint
 thousands of targets on a single host, but can just as easily be distributed
@@ -53,6 +53,8 @@ It is the fastest tool to perform large scale fingerprinting campaigns.
 * [Extending Scannerl](#extending-scannerl)
 * [Contributing](#contributing)
 * [License and Copyright](#license-and-copyright)
+
+See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
 
 # Installation
 
@@ -161,6 +163,8 @@ USAGE
     -b --progress               show progress.
     -x --dryrun                 dry run.
 ```
+
+See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
 
 ## Standalone usage
 
@@ -279,6 +283,8 @@ Scannerl needs to be re-built if new modules are being added.
 
 Make sure new modules get listed (using the **-l** switch) and then use them with their
 respective switch (**-m** for fingerprinting module and **-o** for output modules).
+
+See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
 
 # Contributing
 
