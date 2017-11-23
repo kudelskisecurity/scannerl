@@ -45,11 +45,11 @@ callback_next_step(Args) ->
   % TODO parse
   {result, {ok, result}, ok}.
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %% debug
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % send debug
-  debug(Args, Msg) ->
-    utils:debug(fpmodules, Msg,
-      {Args#args.target, Args#args.id}, Args#args.debugval).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% debug
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% send debug
+debug(Args, Msg) ->
+  utils:debug(fpmodules, Msg,
+    {Args#args.target, Args#args.id}, Args#args.debugval).
 
