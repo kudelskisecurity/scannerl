@@ -37,6 +37,11 @@ by adding fine-tuned scans to your fingerprinting campaigns.
 
 It is the fastest tool to perform large scale fingerprinting campaigns.
 
+For more:
+
+* [Distributed fingerprinting with scannerl](https://research.kudelskisecurity.com/2017/06/06/distributed-fingerprinting-with-scannerl/)
+* [6 months of ICS scanning](https://research.kudelskisecurity.com/2017/10/24/6-months-of-ics-scanning/)
+
 ---
 
 **Table of Contents**
