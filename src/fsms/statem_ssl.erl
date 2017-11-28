@@ -6,8 +6,10 @@
 %%%   {sslcheck, true}: check the certificate validity
 %%%   {sslcheck, full}: the above plus the domain check
 %%%   {sslcheck, false}: disable ssl checking
+%%%   {sslcheck, retry}: full ssl checking and retry with "false" if error
 %%%   {sni, disable}: disable sni
 %%%   {sni, enable}: enable sni
+%%%   {sni, retry}: enable sni and retry without if error
 %%% defaults is erlang's defaults (http://erlang.org/doc/man/ssl.html)
 %%%
 
@@ -27,6 +29,14 @@
 
 % see http://erlang.org/doc/man/inet.html#setopts-2
 -define(COPTS, [binary, {packet, 0}, inet, {recbuf, 65536}, {active, false}, {reuseaddr, true}]).
+
+% this records allows to use "retry"
+% with sslcheck and sni
+-record(retry, {
+          sni = false,
+          sslcheck = false
+         }
+       ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% gen_statem specific
@@ -52,6 +62,7 @@ callback(timeout, _EventContent, Data) when Data#args.retrycnt > 0 andalso Data#
   send_data(Data#args{retrycnt=Data#args.retrycnt-1});
 %% called for sending additional packet when needed
 callback(timeout, _EventContent, Data) ->
+  debug(Data, "fsm timeout"),
   case apply(Data#args.module, callback_next_step, [Data]) of
     {continue, Nbpacket, Payload, ModData} ->
       %flush_socket(Data#args.socket),
@@ -72,8 +83,14 @@ callback(cast, {ssl_closed, _Socket}, Data)  ->
   debug(Data, "fsm ssl_closed error"),
   {stop, normal, Data#args{result={{error, up}, ssl_closed}}};
 %% called when tls_alert
-callback(cast, {ssl_error, _Socket, {tls_alert, Err}}, Data)  ->
-  {stop, normal, Data#args{result={{error, up}, [tls_alert, Err]}}};
+callback(cast, {ssl_error, _Socket, {tls_alert, Reason}}, Data)  ->
+  debug(Data, io_lib:fwrite("fsm tls_alert: ~p", [Reason])),
+  {stop, normal, Data#args{result={{error, up}, [tls_alert, Reason]}}};
+%% tls error
+callback(cast, {tls_error, _Socket, {tls_error, Reason}}, Data)  ->
+  debug(Data, io_lib:fwrite("fsm tls_error: ~p", [Reason])),
+  ssl:close(Data#args.socket),
+  {stop, normal, Data#args{result={{error, up}, Reason}}};
 %% other errors
 callback(cast, {error, Reason}, Data) ->
   debug(Data, io_lib:fwrite("fsm error: ~p", [Reason])),
@@ -89,13 +106,45 @@ connecting(timeout, _, Data) ->
   case utils_fp:lookup(Host, Timeout, Data#args.checkwww) of
     {ok, Addr} ->
       try
-        case ssl:connect(Addr, Port, get_options(Data), Timeout) of
+        {Opts, Retry} = get_options(Data),
+        case ssl:connect(Addr, Port, Opts, Timeout) of
           {ok, Socket} ->
             {next_state, callback, Data#args{socket=Socket,ipaddr=Addr}, 0};
+          {error, {tls_alert, Reason}} when Reason =:= "bad certificate";
+                                            Reason =:= "certificate expired";
+                                            Reason =:= "unknown ca";
+                                            Reason =:= "handshake failure" ->
+            % sslcheck retry
+            case Retry#retry.sslcheck of
+              true ->
+                debug(Data, io_lib:fwrite("socket retry sslcheck error tls_alert: ~p", [Reason])),
+                Nopts = utils:replace_in_list_of_tuple(Data#args.fsmopts, sslcheck, false),
+                gen_statem:cast(self(), restart),
+                {next_state, connecting, Data#args{fsmopts=Nopts}};
+              false ->
+                % sni retry
+                case Retry#retry.sni and Reason =:= "handshake failure" of
+                  true ->
+                    % retry without sni
+                    % by calling callback with restart
+                    debug(Data, io_lib:fwrite("socket retry sni error tls_alert: ~p", [Reason])),
+                    Nopts = utils:replace_in_list_of_tuple(Data#args.fsmopts, sni, disable),
+                    gen_statem:cast(self(), restart),
+                    {next_state, connecting, Data#args{fsmopts=Nopts}};
+                  false ->
+                    debug(Data, io_lib:fwrite("socket error tls_alert: ~p", [Reason])),
+                    gen_statem:cast(self(), {error, {tls_error, Reason}}),
+                    {next_state, connecting, Data}
+                end
+            end;
           {error, {tls_alert, Reason}} ->
+            % any other tls error
+            debug(Data, io_lib:fwrite("socket error tls_alert: ~p", [Reason])),
             gen_statem:cast(self(), {error, {tls_error, Reason}}),
             {next_state, connecting, Data};
           {error, Reason} ->
+            % socket error
+            debug(Data, io_lib:fwrite("socket error: ~p", [Reason])),
             gen_statem:cast(self(), {error, Reason}),
             {next_state, connecting, Data}
         end
@@ -121,6 +170,9 @@ when Data#args.privports == true, Data#args.eaccess_retry < Data#args.eaccess_ma
 %% called when tls alert occurs (badcert, ...)
 connecting(cast, {error, {tls_error=Type, R}}, Data) ->
   {stop, normal, Data#args{result={{error, up}, [Type, R]}}};
+%% called when need to restart
+connecting(cast, restart, Data) ->
+  {next_state, connecting, Data, 0};
 %% called when connection failed
 connecting(cast, {error, Reason}, Data) ->
   {stop, normal, Data#args{result={{error, unknown}, Reason}}};
@@ -139,9 +191,9 @@ get_privports(_) ->
 
 %% provide the socket option
 get_options(Args) ->
-  Opts = parse_ssl_opts(Args#args.fsmopts, Args#args.ctarget, []),
-  ?COPTS ++ get_privports(Args#args.privports)
-    ++ Opts.
+  {Opts, Retry} = parse_ssl_opts(Args#args.fsmopts, Args#args.ctarget, [], #retry{}),
+  Ret = ?COPTS ++ get_privports(Args#args.privports) ++ Opts,
+  {Ret, Retry}.
 
 %% send data
 send_data(Data) ->
@@ -173,31 +225,40 @@ receiving(timeout, _EventContent, Data) ->
   end.
 
 % parse options
-parse_ssl_opts([], _Tgt, Acc) ->
-  Acc;
-parse_ssl_opts([{sslcheck, true}|T], Tgt, Acc) ->
-  % parse sslcheck
+parse_ssl_opts([], _Tgt, Acc, Retry) ->
+  % no more option
+  {Acc, Retry};
+parse_ssl_opts([{sslcheck, true}|T], Tgt, Acc, Retry) ->
+  % sslcheck true
   Opt = utils_ssl:get_opts_verify([]),
-  parse_ssl_opts(T, Tgt, Acc ++ Opt);
-parse_ssl_opts([{sslcheck, false}|T], Tgt, Acc) ->
-  % parse sslcheck
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry);
+parse_ssl_opts([{sslcheck, false}|T], Tgt, Acc, Retry) ->
+  % sslcheck false
   Opt = utils_ssl:get_opts_noverify(),
-  parse_ssl_opts(T, Tgt, Acc ++ Opt);
-parse_ssl_opts([{sslcheck, full}|T], Tgt, Acc) ->
-  % parse sslcheck
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry);
+parse_ssl_opts([{sslcheck, full}|T], Tgt, Acc, Retry) ->
+  % sslcheck full
   Opt = utils_ssl:get_opts_verify(Tgt),
-  parse_ssl_opts(T, Tgt, Acc ++ Opt);
-parse_ssl_opts([{sni, enable}|T], Tgt, Acc) ->
-  % parse sni
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry);
+parse_ssl_opts([{sslcheck, retry}|T], Tgt, Acc, Retry) ->
+  % sslcheck full & retry
+  Opt = utils_ssl:get_opts_verify(Tgt),
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry#retry{sslcheck=true});
+parse_ssl_opts([{sni, enable}|T], Tgt, Acc, Retry) ->
+  % sni enable
   Opt = [{server_name_indication, utils:tgt_to_string(Tgt)}],
-  parse_ssl_opts(T, Tgt, Acc ++ Opt);
-parse_ssl_opts([{sni, disable}|T], Tgt, Acc) ->
-  % parse sni
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry);
+parse_ssl_opts([{sni, disable}|T], Tgt, Acc, Retry) ->
+  % sni disable
   Opt = [{server_name_indication, disable}],
-  parse_ssl_opts(T, Tgt, Acc ++ Opt);
-parse_ssl_opts([H|T], Tgt, Acc) ->
-  % parse the rest
-  parse_ssl_opts(T, Tgt, Acc ++ H).
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry);
+parse_ssl_opts([{sni, retry}|T], Tgt, Acc, Retry) ->
+  % sni enable & retry
+  Opt = [{server_name_indication, utils:tgt_to_string(Tgt)}],
+  parse_ssl_opts(T, Tgt, Acc ++ Opt, Retry#retry{sni=true});
+parse_ssl_opts([H|T], Tgt, Acc, Retry) ->
+  % no match -> add as is
+  parse_ssl_opts(T, Tgt, Acc ++ H, Retry).
 
 handle_packet(Packet, Data) ->
   case Data#args.nbpacket of
