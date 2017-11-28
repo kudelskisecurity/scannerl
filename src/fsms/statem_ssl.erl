@@ -69,15 +69,18 @@ callback(timeout, _EventContent, Data) ->
   end;
 %% called when ssl socket is abruptly closed
 callback(cast, {ssl_closed, _Socket}, Data)  ->
+  debug(Data, "fsm ssl_closed error"),
   {stop, normal, Data#args{result={{error, up}, ssl_closed}}};
 %% called when tls_alert
 callback(cast, {ssl_error, _Socket, {tls_alert, Err}}, Data)  ->
   {stop, normal, Data#args{result={{error, up}, [tls_alert, Err]}}};
 %% other errors
 callback(cast, {error, Reason}, Data) ->
+  debug(Data, io_lib:fwrite("fsm error: ~p", [Reason])),
   ssl:close(Data#args.socket),
   {stop, normal, Data#args{result={{error, up}, Reason}}};
 callback(Event, EventContent, Data)  ->
+  debug(Data, io_lib:fwrite("fsm unexpected event: ~p - ~p", [Event, EventContent])),
   {stop, normal, Data#args{result={{error, unknown}, [unexpected_event, Event, EventContent, Data]}}}.
 
 %% State connecting is used to initiate the ssl connection
@@ -120,7 +123,10 @@ connecting(cast, {error, {tls_error=Type, R}}, Data) ->
   {stop, normal, Data#args{result={{error, up}, [Type, R]}}};
 %% called when connection failed
 connecting(cast, {error, Reason}, Data) ->
-  {stop, normal, Data#args{result={{error, unknown}, Reason}}}.
+  {stop, normal, Data#args{result={{error, unknown}, Reason}}};
+%% called when remote closes the socket
+connecting(info, {ssl_closed=Reason, _}, Data) ->
+  {stop, normal, Data#args{result={{error, up}, Reason}}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% utils
