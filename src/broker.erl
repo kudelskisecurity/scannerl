@@ -71,7 +71,7 @@ add_child(Target, Args, Obj) ->
     io_lib:fwrite("new target started: ~p", [Target]), {Obj#obj.id}, Obj#obj.debugval),
   List = tgt:get_tgts(Target),
   [spawn_link(supervisor, start_child, [scannerl_worker_sup, [
-    Args#args{target=T, port=P, parent=Obj#obj.parent}]]) || {T, P} <- List],
+    Args#args{target=T, port=P, parent=Obj#obj.parent, tgtarg=A}]]) || {T, P, A} <- List],
   length(List).
 
 % add new children for each of these targets

@@ -7,6 +7,7 @@
 -export([debug_parse/1, debug_print/2, debug/4]).
 -export([outputs_init/2, outputs_clean/1, outputs_send/2]).
 -export([read_lines/1, tgt_to_string/1, merge_sockopt/2]).
+-export([replace_in_list_of_tuple/3]).
 
 -include("../includes/opts.hrl").
 
@@ -47,8 +48,8 @@ output_init([{Mod, Args}|T], Scaninfo, Acc) ->
       output_clean(Acc),
       {error, Reason}
   catch
-    _:_ ->
-      utils_opts:print(io_lib:fwrite("[ERROR] output module ~p does not exist", [Mod])),
+    X:Y ->
+      utils_opts:print(io_lib:fwrite("[ERROR] output module ~p error: ~p ~p", [Mod, X, Y])),
       utils_opts:usage()
   end.
 
@@ -107,6 +108,20 @@ merge_sockopt_sub(Left, [{Key, _Value}=H|T], Acc) ->
 merge_sockopt_sub(Left, [{Key}=H|T], Acc) ->
   N = lists:keydelete(Key, 1, Acc),
   merge_sockopt_sub(Left, T, N++[H]).
+
+% replace a specific tuple in a list
+% this is not efficient and is O(N)
+replace_in_list_of_tuple(List, Key, Newvalue) ->
+  replace_tuple(List, Key, Newvalue, []).
+
+replace_tuple([], _Key, _New, Acc) ->
+  Acc;
+replace_tuple([{Key, _V}|T], Key, New, Acc) ->
+  % found offending tuple
+  replace_tuple(T, Key, New, Acc ++ [{Key, New}]);
+replace_tuple([{_, _}=Entry|T], Key, New, Acc) ->
+  % some other tuple
+  replace_tuple(T, Key, New, Acc ++ [Entry]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % debug

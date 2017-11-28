@@ -2,8 +2,14 @@
 %%%
 %%% a tgt can be:
 %%%   - a single IP  (ex: 192.168.0.1)
+%%%   - a single IP on a port (ex: 192.168.0.1:8080)
 %%%   - a cidr range (ex: 10.0.0.0/24)
-%%%   - a string (ex: www.myip.ch)
+%%%   - a cidr range on a port (ex: 10.0.0.0:8080/24)
+%%%   - a domain (ex: www.myip.ch)
+%%%   - a domain on a port (ex: www.myip.ch:81)
+%%% each of the above can have an additional argument
+%%% added with a "+" separator. It must be added at the end.
+%%% It is up to the fp module to use (or ignore) it.
 %%%
 
 -module(tgt).
@@ -16,13 +22,14 @@
 -record(tgt, {
     ip,
     prefix,
-    port=undefined
+    port=undefined,
+    arg=[]
 }).
 
--define(log2denom, 0.69314718055994529).
 -define(MINCIDR, 24).
 -define(PORTSEP, ":").
 -define(RANGESEP, "/").
+-define(ADDSEP, "+").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% convert
@@ -63,7 +70,7 @@ complete_ip(Tgt, Val) ->
   Prefix = Tgt#tgt.prefix,
   Inv = 32 - Prefix - 1,
   Lip = bin_to_ip(<<Base:Prefix, Val:1, 0:Inv>>),
-  #tgt{ip=Lip,prefix=(Prefix+1),port=Tgt#tgt.port}.
+  #tgt{ip=Lip,prefix=(Prefix+1),port=Tgt#tgt.port, arg=Tgt#tgt.arg}.
 
 % get lower range
 lower(Tgt) ->
@@ -140,9 +147,11 @@ parse_port(Val, Defport) ->
   end.
 
 % parse a domain and return a tgt record
+% format: see header
 parse_domain(String, Defport) ->
-  E = string:tokens(String, ?PORTSEP),
-  #tgt{ip=hd(E), prefix=32, port=parse_port(tl(E), Defport)}.
+  [H|T] = string:tokens(String, ?ADDSEP),
+  E = string:tokens(H, ?PORTSEP),
+  #tgt{ip=hd(E), prefix=32, port=parse_port(tl(E), Defport), arg=T}.
 
 % returns {Prefix, Port}
 parse_ip_more([], Defport) ->
@@ -155,15 +164,17 @@ parse_ip_more(?PORTSEP ++ Rest, Defport) ->
   {Prefix, parse_port(hd(E), Defport)}.
 
 % parse an ip and return a tgt record
-% format: 192.168.0.1:8080/32
+% format: see header
 parse_ip(String, Defport) ->
+  % first separate the option
+  [H|T] = string:tokens(String, ?ADDSEP),
   try
-    {A, Rest1} = string:to_integer(String),
+    {A, Rest1} = string:to_integer(H),
     {B, Rest2} = string:to_integer(tl(Rest1)),
     {C, Rest3} = string:to_integer(tl(Rest2)),
     {D, Rest4} = string:to_integer(tl(Rest3)),
     {Prefix, Port} = parse_ip_more(Rest4, Defport),
-    {ok, #tgt{ip=int_to_ip(mask_ip({A,B,C,D}, Prefix)), prefix=Prefix, port=Port}}
+    {ok, #tgt{ip=int_to_ip(mask_ip({A,B,C,D}, Prefix)), prefix=Prefix, port=Port, arg=T}}
   of
     {ok, Res} -> {ok, Res}
   catch
@@ -174,11 +185,11 @@ parse_ip(String, Defport) ->
 %% explode range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get a list of all target in a tgt record
-get_tgts(#tgt{ip=Ip,prefix=32,port=Port}) ->
-  [{Ip,Port}];
-get_tgts(#tgt{ip=Ip,prefix=Prefix,port=Port}) ->
+get_tgts(#tgt{ip=Ip,prefix=32,port=Port, arg=Arg}) ->
+  [{Ip,Port,Arg}];
+get_tgts(#tgt{ip=Ip,prefix=Prefix,port=Port,arg=Arg}) ->
   Inv = 32 - Prefix,
   Max = round(math:pow(2, Inv)) - 1,
   Base = ip_to_int(Ip),
-  [{int_to_ip(Base+Inc),Port} || Inc <- lists:seq(0, Max)].
+  [{int_to_ip(Base+Inc),Port,Arg} || Inc <- lists:seq(0, Max)].
 

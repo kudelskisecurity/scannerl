@@ -9,7 +9,8 @@
     % ----------------------------------------------------------------------
     module,          % the module to use for fingerprinting
     target,          % [original] the target to fingerprint
-    port,            % [original] port to fingerprint
+    port,            % [original] port to fingerprint if diff from global
+    tgtarg=[],       % [optional] target argument if any
     retry=0,         % [optional] number of retry when timed out
     checkwww,        % [optional] dns will check for www.target
     arguments=[],    % [optional] module arguments (list of strings)
