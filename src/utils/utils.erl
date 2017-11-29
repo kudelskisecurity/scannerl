@@ -187,26 +187,27 @@ debug_more_info(Debugval, Msg) when Debugval#debugval.level128 ->
 debug_more_info(_, Msg) ->
   Msg.
 
-% for master.erl and scannerl
+% format debug message
+debug_format(From, Msg) ->
+  io_lib:fwrite("[DBG] [~s] [~s] ~s\n", [get_ts(), atom_to_list(From), Msg]).
+
+% print debug to standard out
 % expects an atom in From
 debug_print(From, Msg) ->
-  Out = io_lib:fwrite("[DBG] [~s] [~s] ~s\n", [get_ts(), atom_to_list(From), Msg]),
-  io:put_chars(standard_error, Out).
+  io:put_chars(standard_error, debug_format(From, Msg)).
 
-debug(fpmodules, Msg, {Tgt, Id}, Dbg) when Dbg#debugval.level1 ->
+%% global function for debugging
+debug(fpmodules=Who, Msg, {Tgt, Id}, Dbg) when Dbg#debugval.level1 ->
   % from fpmodules to master
-  Pid = global:whereis_name(master),
   Msg2 = io_lib:fwrite("[~s|~p]: ~s", [Id, Tgt, Msg]),
-  Pid ! {debug, fpmodules, debug_more_info(Dbg, Msg2)};
-debug(outmodules, Msg, _, Dbg) when Dbg#debugval.level2->
+  debug_send(Who, debug_more_info(Dbg, Msg2), Dbg#debugval.where);
+debug(outmodules=Who, Msg, _, Dbg) when Dbg#debugval.level2->
   % from outmodules to master
-  Pid = global:whereis_name(master),
-  Pid ! {debug, outmodules, debug_more_info(Dbg, Msg)};
-debug(broker, Msg, {Id}, Dbg) when Dbg#debugval.level4 ->
+  debug_send(Who, debug_more_info(Dbg, Msg), Dbg#debugval.where);
+debug(broker=Who, Msg, {Id}, Dbg) when Dbg#debugval.level4 ->
   % from broker to master
-  Pid = global:whereis_name(master),
   Msg2 = io_lib:fwrite("[~s]: ~s", [Id, Msg]),
-  Pid ! {debug, broker, debug_more_info(Dbg, Msg2)};
+  debug_send(Who, debug_more_info(Dbg, Msg2), Dbg#debugval.where);
 debug(master, Msg, _, Dbg) when Dbg#debugval.level8 ->
   % master to stderr
   debug_print(master, debug_more_info(Dbg, Msg));
@@ -215,6 +216,13 @@ debug(scannerl, Msg, _, Dbg) when Dbg#debugval.level16 ->
   debug_print(scannerl, debug_more_info(Dbg, Msg));
 debug(_, _, _, _) ->
   ok.
+
+%% this allows to control where
+%% debugs are sent
+debug_send(From, What, local) ->
+  io:fwrite(debug_format(From, What));
+debug_send(From, Msg, remote) ->
+  global:whereis_name(master) ! {debug, From, Msg}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % file reading

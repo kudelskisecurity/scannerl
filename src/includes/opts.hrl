@@ -57,6 +57,9 @@
 % see -V
 -record(debugval, {
     value,          % value
+    % where to print (remote: message passing, local: stdout)
+    % only use for debugging on single node
+    where=remote,
     level1,         % fpmodules
     level2,         % outmodules
     level4,         % broker
