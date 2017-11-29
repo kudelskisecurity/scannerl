@@ -178,7 +178,10 @@ connecting(cast, {error, Reason}, Data) ->
   {stop, normal, Data#args{result={{error, unknown}, Reason}}};
 %% called when remote closes the socket
 connecting(info, {ssl_closed=Reason, _}, Data) ->
-  {stop, normal, Data#args{result={{error, up}, Reason}}}.
+  {stop, normal, Data#args{result={{error, up}, Reason}}};
+%% called when other info come in
+connecting(info, Err, Data) ->
+  {stop, normal, Data#args{result={{error, up}, Err}}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% utils
