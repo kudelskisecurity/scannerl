@@ -30,7 +30,7 @@
   -define(FSMMODE, "using statem").
 -endif.
 
--define(VERSION, "0.34").
+-define(VERSION, "0.35").
 -define(MODULES, % master module
   [
     master,                % the master module
@@ -179,7 +179,7 @@ check_queue(Opts) when Opts#opts.pause == false ->
 rcv_loop(Opts, Outputs, Tot, Nbposres) ->
   Pause = check_queue(Opts),
   utils:debug(scannerl,
-    io_lib:fwrite("(paused:~p) result received: ~p | queuelen: ~p", [Pause,
+    io_lib:fwrite("(pause:~p) result received: ~p | queuelen: ~p", [Pause,
       Tot, msg_queue_len()]), {}, Opts#opts.debugval),
   receive
     {progress} ->
