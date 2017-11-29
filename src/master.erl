@@ -391,11 +391,11 @@ wait_end(Progress, Pids, Opts) ->
 pause_all(Pids, Flag, Opts) ->
   case Flag of
     true ->
-      utils:debug(master, "pausing ...", {}, Opts#opts.debugval),
-      [X ! {pause} || X <- Pids];
+      utils:debug(master, "pause brokers ...", {}, Opts#opts.debugval),
+      [X ! {prio, pause} || X <- Pids];
     false ->
-      utils:debug(master, "resuming ...", {}, Opts#opts.debugval),
-      [X ! {resume} || X <- Pids]
+      utils:debug(master, "resume brokers ...", {}, Opts#opts.debugval),
+      [X ! {prio, resume} || X <- Pids]
   end.
 
 % start the master

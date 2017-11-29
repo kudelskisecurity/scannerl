@@ -28,7 +28,7 @@
     mdone,        % master is done pushing
     dry,          % dry run
     debugval,     % debug val
-    pause,        % scan paused
+    pause=false,  % scan paused
     tcnt,         % target received count
     maxchild,     % max nb of child to spin
     outputs,      % the output modules
@@ -68,7 +68,7 @@ kill_children(Id) ->
 % add a new child to process a new target
 add_child(Target, Args, Obj) ->
   utils:debug(broker,
-    io_lib:fwrite("new target started: ~p", [Target]), {Obj#obj.id}, Obj#obj.debugval),
+    io_lib:fwrite("new target started: ~p (pause:~p)", [Target, Obj#obj.pause]), {Obj#obj.id}, Obj#obj.debugval),
   List = tgt:get_tgts(Target),
   [spawn_link(supervisor, start_child, [scannerl_worker_sup, [
     Args#args{target=T, port=P, parent=Obj#obj.parent, tgtarg=A}]]) || {T, P, A} <- List],
@@ -78,6 +78,7 @@ add_child(Target, Args, Obj) ->
 add_childs([], _, Agg, _) ->
   Agg;
 add_childs([H|T], _Arg, Agg, Obj) when Obj#obj.pause == true ->
+  utils:debug(broker, "broker in pause", {Obj#obj.id}, Obj#obj.debugval),
   self() ! {targets, [H|T]},
   Agg;
 add_childs([H|T], Arg, Agg, Obj) ->
@@ -195,13 +196,29 @@ listen(Obj, false) ->
 
 rcv_loop(Obj) ->
   receive
+    {prio, Msg} ->
+      process_msg(Obj, Msg)
+  after 0 ->
+    receive
+      {prio, Msg} ->
+        process_msg(Obj, Msg);
+      Msg ->
+        process_msg(Obj, Msg)
+    after
+      ?CHECKTO ->
+        Obj
+    end
+  end.
+
+process_msg(Obj, Msg) ->
+ 	case Msg of
     {pause} ->
       % received by master
-      utils:debug(broker, "pausing", {Obj#obj.id}, Obj#obj.debugval),
+      utils:debug(broker, "broker pause", {Obj#obj.id}, Obj#obj.debugval),
       rcv_loop(Obj#obj{pause=true});
     {resume} ->
       % received by master
-      utils:debug(broker, "resuming", {Obj#obj.id}, Obj#obj.debugval),
+      utils:debug(broker, "broker resume", {Obj#obj.id}, Obj#obj.debugval),
       erlang:garbage_collect(),
       rcv_loop(Obj#obj{pause=false});
     {done} ->
@@ -246,9 +263,6 @@ rcv_loop(Obj) ->
       Buf = outs_send(Obj#obj.outputs, Result, Obj#obj.outbuf, Obj#obj.outbufsz),
       rcv_loop(Obj#obj{outbuf=Buf});
     _ ->
-      Obj
-  after
-    ?CHECKTO ->
       Obj
   end.
 
