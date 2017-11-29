@@ -39,6 +39,7 @@ It is the fastest tool to perform large scale fingerprinting campaigns.
 
 For more:
 
+* [Fingerprint all the things with scannerl at BlackAlps](https://youtu.be/xHF2T5E7OFQ)
 * [Distributed fingerprinting with scannerl](https://research.kudelskisecurity.com/2017/06/06/distributed-fingerprinting-with-scannerl/)
 * [6 months of ICS scanning](https://research.kudelskisecurity.com/2017/10/24/6-months-of-ics-scanning/)
 
