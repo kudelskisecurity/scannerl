@@ -68,7 +68,7 @@ First install Erlang (at least v.18) by choosing the right packaging for your
 platform: [Erlang downloads](https://www.erlang-solutions.com/resources/download.html)
 
 Install the required packages:
-```
+```bash
 # on debian
 $ sudo apt install erlang erlang-src rebar
 
@@ -80,14 +80,14 @@ $ sudo pacman -S erlang-nox rebar
 
 Here are the steps to build scannerl:
 
-```
+```bash
 $ git clone https://github.com/kudelskisecurity/scannerl.git
 $ cd scannerl
 $ ./build.sh
 ```
 
 Get the usage by running
-```
+```bash
 $ ./scannerl -h
 ```
 
@@ -180,18 +180,18 @@ Therefore, the requirements described in [Distributed setup](#distributed-setup)
 must also be met.
 
 A quick way to do this is to make sure your host is able to resolve itself with
-```
+```bash
 grep -q "127.0.1.1\s*`hostname`" /etc/hosts || echo "127.0.1.1 `hostname`" | sudo tee -a /etc/hosts
 ```
 
 and create an SSH key (if not yet present) and add it to the `authorized_keys` (you need
 an SSH server running):
-```
+```bash
 cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 ```
 
 The following example runs an HTTP banner grabing on *google.com* from localhost
-```
+```bash
 ./scannerl -m httpbg -d google.com
 ```
 
@@ -204,7 +204,7 @@ See [Distributed setup](#distributed-setup) for more information.
 Scannerl expects a list of slaves to use (provided by the **-s** or
 **-S** switches).
 
-```
+```bash
 ./scannerl -m httpbg -d google.com -s host1,host2,host3
 ```
 
@@ -213,7 +213,7 @@ Scannerl expects a list of slaves to use (provided by the **-s** or
 Scannerl will list the available modules (output modules as well as
 fingerprinting modules) with the **-l** switch:
 
-```
+```bash
 $ ./scannerl -l
 
 Fingerprinting modules available
@@ -234,7 +234,7 @@ stdout             output to stdout
 
 Arguments can be provided to modules with a colon. For
 example for the *file* output module:
-```
+```bash
 ./scannerl -m httpbg -d google.com -o file:/tmp/result
 ```
 
