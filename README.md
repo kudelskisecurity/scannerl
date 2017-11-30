@@ -76,9 +76,7 @@ $ sudo apt install erlang erlang-src rebar
 $ sudo pacman -S erlang-nox rebar
 ```
 
-## Build
-
-Here are the steps to build scannerl:
+Then build scannerl:
 
 ```bash
 $ git clone https://github.com/kudelskisecurity/scannerl.git
@@ -90,6 +88,8 @@ Get the usage by running
 ```bash
 $ ./scannerl -h
 ```
+
+For detailed explanations see the [wiki installation page](https://github.com/kudelskisecurity/scannerl/wiki/Installation)
 
 ## Distributed setup
 
