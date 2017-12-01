@@ -121,7 +121,7 @@ $ ./scannerl -h
   \___ \| |     / _ \ |  \| |  \| |  _| | |_) | |
    ___) | |___ / ___ \| |\  | |\  | |___|  _ <| |___
   |____/ \____/_/   \_\_| \_|_| \_|_____|_| \_\_____|
-
+                                                   
 
 USAGE
   scannerl MODULE TARGETS [NODES] [OPTIONS]
@@ -161,13 +161,16 @@ USAGE
     -C <path> --config <path>   read arguments from file, one per line.
     -O <mode> --outmode <mode>  0: on Master, 1: on slave, >1: on broker (default: 0).
     -v <val> --verbose <val>    be verbose (0 <= int <= 255).
+    -K <opt> --socket <opt>     comma separated socket option (key[:value]).
     -l --list-modules           list available fp/out modules.
     -V --list-debug             list available debug options.
-    -X --priv-ports             Use only source port between 1 and 1024.
+    -A --print-args             Output the args record.
+    -X --priv-ports             use only source port between 1 and 1024.
     -N --nosafe                 keep going even if some slaves fail to start.
     -w --www                    DNS will try for www.<domain>.
     -b --progress               show progress.
     -x --dryrun                 dry run.
+
 ```
 
 See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
@@ -281,16 +284,12 @@ It is easy to add new modules to it:
   For example, the *out_file.erl* and *out_stdout.erl* modules allow
   respectively to output to a file or to stdout (default behavior if not specified).
 
-To add new modules, simply follow the behavior (*fp_module.erl* for fingerprinting
+To create new modules, simply follow the behavior (*fp_module.erl* for fingerprinting
 modules and *out_behavior.erl* for output module) and implement your modules.
-Push them to their respective folders and insert a entries in the *SLMODULES* list
-in the *scannerl.erl* file so that they get compiled.
-Scannerl needs to be re-built if new modules are being added.
 
-Make sure new modules get listed (using the **-l** switch) and then use them with their
-respective switch (**-m** for fingerprinting module and **-o** for output modules).
+New modules can either be added at compile time or dynamically as an external file.
 
-See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
+See the [wiki page](https://github.com/kudelskisecurity/scannerl/wiki/Module-Implementation) for more.
 
 # Contributing
 
