@@ -20,7 +20,9 @@
 -define(MODARGSEP, ":").
 -define(MODARGTOK, "ma").
 -define(ERL_EXT, ".erl").
+-define(BEAM_EXT, ".beam").
 -define(OUTARGSEP, ":").
+-define(PATHSEP, "/").
 
 -define(OPT_EQUAL, "=").
 -define(OPT_DASH, "-").
@@ -41,7 +43,8 @@
 -define(INFINITYATOM, infinity).
 
 -define(ACCEPTED_ARGS, ["m", "f", "F", "d", "D", "s", "S", "o", "p", "t", "r",
-  "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j", "h", "K"]).
+  "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j",
+  "h", "K", "A"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Banner
@@ -103,6 +106,7 @@ usage() ->
   print("    -K <opt> --socket <opt>     comma separated socket option (key[:value])."),
   print("    -l --list-modules           list available fp/out modules."),
   print("    -V --list-debug             list available debug options."),
+  print("    -A --print-args             Output the args record."),
   print("    -X --priv-ports             use only source port between 1 and 1024."),
   print("    -N --nosafe                 keep going even if some slaves fail to start."),
   print("    -w --www                    DNS will try for www.<domain>."),
@@ -114,6 +118,10 @@ usage() ->
 % return git short commit hash
 get_short_hash() ->
   ?GIT_SHORT_HASH.
+
+print_args() ->
+  io:fwrite(?ARGSHDR),
+  halt(1).
 
 list_modules() ->
   % print fp modules
@@ -248,6 +256,7 @@ getopt(List) ->
   Opt2 = getopt_deep(List2, Opt),
   check_list_mod(maps:get("l", Opt2, nil)),
   check_list_dbg(maps:get("V", Opt2, nil)),
+  check_print_args(maps:get("A", Opt2, nil)),
   check_fpmodule(maps:get("m", Opt2, nil)),
   Opt2.
 
@@ -388,30 +397,15 @@ optfill(Map, Mods, Version) ->
 
 parse_output_arg(Arg) ->
   Elems = string:tokens(Arg, ?OUTARGSEP),
-  Mod = complete_pre(hd(Elems), ?OUT_PRE),
-  {list_to_atom(Mod), tl(Elems)}.
+  Mod = load_mod(hd(Elems), ?OUT_PRE),
+  {Mod, tl(Elems)}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % utils
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % strip extension
 strip_ext(String) ->
-  case string:str(String, ?ERL_EXT) of
-    0 ->
-      String;
-    Pos ->
-      string:substr(String, 1, Pos-1)
-  end.
-
-complete_pre(String, Pre) ->
-  case string:str(String, Pre) of
-    0 ->
-      Pre ++ String;
-    1 ->
-      String;
-    _ ->
-      Pre ++ String
-  end.
+  filename:rootname(String).
 
 % check there's a fpmodule selected
 check_fpmodule(nil) ->
@@ -430,6 +424,11 @@ check_list_dbg(nil) ->
   ok;
 check_list_dbg(_Mod) ->
   list_debug().
+
+check_print_args(nil) ->
+  ok;
+check_print_args(_Mod) ->
+  print_args().
 
 print(Msg) ->
   M = io_lib:fwrite("~s\n", [Msg]),
@@ -489,6 +488,62 @@ keyval_to_tuple([H|T], Agg) ->
   end,
   keyval_to_tuple(T, Agg ++ [Opt]).
 
+%% load a module provided from the CLI
+%% switch -m or -o
+load_mod(Mod, Pre) ->
+  case filelib:is_file(Mod) of
+    false ->
+      %io:fwrite("internal module: ~p~n", [Mod]),
+      list_to_atom(normalize_module(Mod, Pre));
+    true ->
+      %io:fwrite("external module: ~p~n", [Mod]),
+      load_ext_mod(Mod)
+  end.
+
+%% load a module from the path to its .beam file
+load_beam_mod(Path) ->
+  %io:fwrite("loading external module from ~p~n", [Path]),
+  Abs = filename:rootname(Path),
+  case code:load_abs(Abs) of
+    {module, M} ->
+      M;
+    {error, Reason} ->
+      print(io_lib:fwrite("[ERROR] Can't load module: ~p: ~p", [Path, Reason])),
+      usage()
+  end.
+
+%% load an external module (.erl or .beam)
+load_ext_mod(Path) ->
+  Ext = filename:extension(Path),
+  case Ext of
+    ?ERL_EXT ->
+      print(io_lib:fwrite("[ERROR] Can't load module ~p, need to be compiled first", [Path])),
+      usage();
+    ?BEAM_EXT ->
+      load_beam_mod(Path);
+    _ ->
+      print(io_lib:fwrite("[ERROR] Cannot load module ~p", [Path])),
+      usage()
+  end.
+
+%% prepend Pre to String
+complete_pre(String, Pre) ->
+  case string:str(String, Pre) of
+    0 ->
+      Pre ++ String;
+    1 ->
+      String;
+    _ ->
+      Pre ++ String
+  end.
+
+%% normalize the module
+%% to allow to specify modules
+%% without "fp_" and the extension (".erl")
+normalize_module(Mod, Pre) ->
+  Tmp = strip_ext(Mod),
+  complete_pre(Tmp, Pre).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the option matching functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -500,9 +555,8 @@ add_opt("o"=Key, Value, Map) ->
 add_opt("m"=Key, Value, Map) ->
   Elems = tokenize(Value, ?MODARGSEP),
   % adding the module argument
-  Tmp = strip_ext(hd(Elems)),
-  Tmp2 = complete_pre(Tmp, ?FP_PRE),
-  N = maps:put(Key, list_to_atom(Tmp2), Map),
+  Mod = load_mod(hd(Elems), ?FP_PRE),
+  N = maps:put(Key, Mod, Map),
   % arguments to the fingerprinting module are passed
   % as a list of string
   maps:put(?MODARGTOK, tl(Elems), N);
