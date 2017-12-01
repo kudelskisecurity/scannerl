@@ -6,6 +6,6 @@
 ebin
 src/includes/fpmodules.hrl
 src/includes/outmodules.hrl
-src/includes/githash.hrl
+src/includes/defines.hrl
 .rebar/
 scannerl
