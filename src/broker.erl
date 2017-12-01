@@ -6,7 +6,7 @@
 -export([scan/1]).
 -include("includes/opts.hrl").
 -include("includes/args.hrl").
--include("includes/erlversion.hrl").
+-include("includes/defines.hrl").
 
 % check children every CHECKTO
 -define(CHECKTO, 3000).

@@ -8,13 +8,13 @@
 -module(utils_opts).
 -author("Adrien Giner - adrien.giner@kudelskisecurity.com").
 
--export([getopt/1, optfill/3, usage/0, get_short_hash/0, print/1]).
+-export([getopt/1, optfill/3, usage/0, print/1, banner/0]).
 
 -include("../includes/opts.hrl").
 -include("../includes/args.hrl").
 -include("../includes/fpmodules.hrl").
 -include("../includes/outmodules.hrl").
--include("../includes/githash.hrl").
+-include("../includes/defines.hrl").
 
 -define(ARGSEP, ",").
 -define(MODARGSEP, ":").
@@ -44,10 +44,23 @@
   "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j", "h", "K"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Banner
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+banner() ->
+  print("   ____   ____    _    _   _ _   _ _____ ____  _"),
+  print("  / ___| / ___|  / \\  | \\ | | \\ | | ____|  _ \\| |"),
+  print("  \\___ \\| |     / _ \\ |  \\| |  \\| |  _| | |_) | |"),
+  print("   ___) | |___ / ___ \\| |\\  | |\\  | |___|  _ <| |___"),
+  print(io_lib:fwrite("  |____/ \\____/_/   \\_\\_| \\_|_| \\_|_____|_| \\_\\_____| v~s (~s)",
+    [?VERSION, get_short_hash()])),
+	print("                                                   ").
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Usage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % print usage
 usage() ->
+  banner(),
   print(""),
   print("USAGE"),
   print("  scannerl MODULE TARGETS [NODES] [OPTIONS]"),
@@ -104,6 +117,7 @@ get_short_hash() ->
 
 list_modules() ->
   % print fp modules
+  banner(),
   print(""),
   print("Fingerprinting modules available"),
   print("================================\n"),
@@ -116,6 +130,7 @@ list_modules() ->
   halt(1).
 
 list_debug() ->
+  banner(),
   print(""),
   print("Binary combination of following values:"),
   print("  level 0   (0b 0000 0000): no debug."),

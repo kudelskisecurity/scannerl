@@ -1,5 +1,6 @@
 #!/bin/sh
 # https://github.com/kudelskisecurity/scannerl
+version="0.35"
 
 # check deps
 hash erl 2>/dev/null || { echo "install \"erlang\" (https://github.com/kudelskisecurity/scannerl)"; exit 1; }
@@ -26,9 +27,11 @@ done | tr '\n' ',' | \
 
 # update git hash
 gitv=`git rev-parse --short HEAD 2>/dev/null`
-echo "-define(GIT_SHORT_HASH, \"${gitv}\")." > ./src/includes/githash.hrl 2>/dev/null
-echo "-define(ERLANG_VERSION, \"${erlversion}\")." > ./src/includes/erlversion.hrl
-[ "${erlversion}" -lt "20" ] && echo "-define(USE_GENFSM, true)." >> ./src/includes/erlversion.hrl
+echo "-define(VERSION, \"${version}\")." > ./src/includes/defines.hrl
+echo "-define(GIT_SHORT_HASH, \"${gitv}\")." >> ./src/includes/defines.hrl 2>/dev/null
+echo "-define(ERLANG_VERSION, \"${erlversion}\")." >> ./src/includes/defines.hrl
+[ "${erlversion}" -lt "20" ] && echo "-define(USE_GENFSM, true)." >> ./src/includes/defines.hrl
+echo "-define(ARGSHDR, \"`cat ./src/includes/args.hrl`\")." >> ./src/includes/defines.hrl
 
 # Compile
 rebar compile escriptize

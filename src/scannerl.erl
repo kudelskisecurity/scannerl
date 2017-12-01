@@ -16,7 +16,7 @@
 -author("Adrien Giner - adrien.giner@kudelskisecurity.com").
 -include("includes/opts.hrl").
 -include("includes/args.hrl").
--include("includes/erlversion.hrl").
+-include("includes/defines.hrl").
 
 -ifdef(USE_GENFSM).
   -define(TCPFSM, fsm_tcp).
@@ -30,7 +30,6 @@
   -define(FSMMODE, "using statem").
 -endif.
 
--define(VERSION, "0.35").
 -define(MODULES, % master module
   [
     master,                % the master module
@@ -212,18 +211,6 @@ rcv_loop(Opts, Outputs, Tot, Nbposres) ->
   end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% banner
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-banner() ->
-  print(normal, "   ____   ____    _    _   _ _   _ _____ ____  _"),
-  print(normal, "  / ___| / ___|  / \\  | \\ | | \\ | | ____|  _ \\| |"),
-  print(normal, "  \\___ \\| |     / _ \\ |  \\| |  \\| |  _| | |_) | |"),
-  print(normal, "   ___) | |___ / ___ \\| |\\  | |\\  | |___|  _ <| |___"),
-  print(normal, io_lib:fwrite("  |____/ \\____/_/   \\_\\_| \\_|_| \\_|_____|_| \\_\\_____| v~s (~s)",
-    [?VERSION, utils_opts:get_short_hash()])),
-  print(normal, "                                                   ").
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % master related
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % launch the scanning process
@@ -251,11 +238,13 @@ main(Args) ->
   _ = os:cmd("epmd -daemon"),
   Start = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
   register_myself(),
-  banner(),
 
   % parsing the argument in a map
   %print(normal, "parsing args ..."),
   Map = utils_opts:getopt(Args),
+
+  % print the banner
+  utils_opts:banner(),
 
   % compile needed modules
   Tmp = ?SLMODULES ++ [maps:get("m", Map)],
