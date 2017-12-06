@@ -73,7 +73,7 @@ Install the required packages:
 $ sudo apt install erlang erlang-src rebar
 
 # on arch
-$ yaourt -S scannerl
+sudo pacman -S erlang-nox rebar
 ```
 
 Then build scannerl:
@@ -89,7 +89,12 @@ Get the usage by running
 $ ./scannerl -h
 ```
 
-For detailed explanations see the [wiki installation page](https://github.com/kudelskisecurity/scannerl/wiki/Installation)
+Scannerl is available on aur for arch linux users
+```bash
+$ yaourt -S scannerl
+```
+
+For other installation options see the [wiki installation page](https://github.com/kudelskisecurity/scannerl/wiki/Installation)
 
 ## Distributed setup
 
