@@ -73,7 +73,7 @@ Install the required packages:
 $ sudo apt install erlang erlang-src rebar
 
 # on arch
-$ sudo pacman -S erlang-nox rebar
+$ yaourt -S scannerl
 ```
 
 Then build scannerl:
