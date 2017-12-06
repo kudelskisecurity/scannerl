@@ -44,7 +44,7 @@ callback_next_step(Args) when Args#args.packetrcv < 1 ->
   {result, {{error, up}, timeout}};
 callback_next_step(Args) ->
   % TODO parse
-  {result, {ok, result}, ok}.
+  {result, {{ok, result}, ok}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% debug
