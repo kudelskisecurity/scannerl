@@ -52,7 +52,9 @@
     ?SSLFSM,
     % utilities
     utils_http,
-    utils_ssl
+    utils_ssl,
+    utils_fox,
+    utils_mqtt
   ]).
 -define(SCANNERL, "scannerl").
 -define(CHECKTO, 60000). % 1 minute
