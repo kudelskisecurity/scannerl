@@ -1,6 +1,6 @@
 #!/bin/sh
 # https://github.com/kudelskisecurity/scannerl
-version="0.36"
+version="0.37"
 
 # check deps
 hash erl 2>/dev/null || { echo "install \"erlang\" (https://github.com/kudelskisecurity/scannerl)"; exit 1; }
