@@ -40,6 +40,7 @@ It is the fastest tool to perform large scale fingerprinting campaigns.
 For more:
 
 * [Fingerprint all the things with scannerl at BlackAlps](https://youtu.be/xHF2T5E7OFQ)
+* [Fingerprinting MySQL with scannerl](https://research.kudelskisecurity.com/2017/12/11/fingerprinting-mysql-with-scannerl/)
 * [Distributed fingerprinting with scannerl](https://research.kudelskisecurity.com/2017/06/06/distributed-fingerprinting-with-scannerl/)
 * [6 months of ICS scanning](https://research.kudelskisecurity.com/2017/10/24/6-months-of-ics-scanning/)
 
@@ -227,15 +228,34 @@ $ ./scannerl -l
 Fingerprinting modules available
 ================================
 
+bacnet             UDP/47808: Bacnet identification
+chargen            UDP/19: Chargen amplification factor identification
+fox                TCP/1911: FOX identification
 httpbg             TCP/80: HTTP Server header identification
                      - Arg1: [true|false] follow redirection [Default:false]
+modbus             TCP/502: Modbus identification
+mqtt               TCP/1883: MQTT identification
+mqtts              TCP/8883: MQTT over SSL identification
+mysql_greeting     TCP/3306: Mysql version identification
 
 Output modules available
 ========================
 
+csv                output to csv
+                     - Arg1: [true|false] save everything [Default:true]
+csvfile            output to csv file
+                     - Arg1: [true|false] save everything [Default:false]
+                     - Arg2: File path
 file               output to file
                      - Arg1: File path
+file_ip            output to stdout (only ip)
+                     - Arg1: File path
+file_mini          output to file (only ip and result)
+file_resultonly    output to file (only result)
 stdout             output to stdout
+stdout_ip          output to stdout (only IP)
+stdout_mini        output to stdout (only ip and result)
+
 ```
 
 ## Modules arguments
