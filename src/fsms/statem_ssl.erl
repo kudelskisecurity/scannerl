@@ -181,7 +181,7 @@ connecting(info, {ssl_closed=Reason, _}, Data) ->
   {stop, normal, Data#args{result={{error, up}, Reason}}};
 %% called when other info come in
 connecting(info, Err, Data) ->
-  {stop, normal, Data#args{result={{error, up}, Err}}}.
+  {stop, normal, Data#args{result={{error, unknown}, Err}}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% utils

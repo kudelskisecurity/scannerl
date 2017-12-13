@@ -96,6 +96,7 @@ callback(info, {tcp_error, _Socket, Reason}, Data) ->
 %% called when domain lookup failed
 callback(info, {timeout, _Socket, inet}, Data) ->
   {stop, normal, Data#args{result={{error, unknown}, dns_timeout}}};
+%% generic error
 callback(Event, EventContent, Data) ->
   {stop, normal, Data#args{result={{error, unknown}, [unexpected_event, Event, EventContent, Data]}}}.
 
@@ -135,7 +136,13 @@ when Data#args.privports == true, Data#args.eaccess_retry < Data#args.eaccess_ma
   {next_state, connecting, Data#args{eaccess_retry=Data#args.eaccess_retry+1}, 0};
 %% called when connection failed
 connecting(cast, {error, Reason}, Data) ->
-  {stop, normal, Data#args{result={{error, unknown}, Reason}}}.
+  {stop, normal, Data#args{result={{error, unknown}, Reason}}};
+%% called when timeout on socket, usually happens when too many targets on a single host
+connecting(info, {Reason, _Socket, inet}, Data) ->
+  {stop, normal, Data#args{result={{error, unknown}, list_to_atom("socket_" ++ atom_to_list(Reason))}}};
+%% called for any other errors during connection, shouldn't happen
+connecting(info, Err, Data) ->
+  {stop, normal, Data#args{result={{error, unknown}, Err}}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% utils
