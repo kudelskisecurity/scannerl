@@ -117,7 +117,8 @@ wait_for_it(Node, Port, Ref, Dbg) ->
 
 % start a remote node
 start_it(Node, Hostname, Name, Portmin, Timeout, Dbg) ->
-  Cmd = string:join([?REMOTE_BIN, Hostname, ?BIN, "-sname", Name,
+  Fname = string:join([Name, "@", Hostname], ""),
+  Cmd = string:join([?REMOTE_BIN, Hostname, ?BIN, "-name", Fname,
     ?ARGS, ?TCPPORT, integer_to_list(Portmin), ?CONNARGS], " "),
   utils:debug(master, io_lib:fwrite("[uslave] remote command: ~p", [Cmd]),
     undefined, Dbg),
