@@ -104,9 +104,9 @@ wait_for_it(Node, Port, Ref, Dbg) ->
       wait_for_it(Node, Port, Ref, Dbg);
     {'EXIT', Port, Reason} ->
       % port communication threw an error
-      Err = io_lib:fwrite("uslave] ssh communication failed: ~p", [Reason]),
-      utils:debug(master, Err, undefined, Dbg),
-      {error, list_to_atom};
+      Err = io_lib:fwrite("ssh communication failed: ~p", [Reason]),
+      utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
+      {error, Err};
     {Port, {exit_status, 0}} ->
       % port status is ok
       utils:debug(master, "[uslave] ssh command returned 0",
@@ -114,9 +114,8 @@ wait_for_it(Node, Port, Ref, Dbg) ->
       wait_for_it(Node, Port, Ref, Dbg);
     {Port, {exit_status, Status}} ->
       % port exit status != 0
-      Err = "SSH error code: " ++ integer_to_list(Status),
-      utils:debug(master, "[uslave] ssh command returned error",
-        undefined, Dbg),
+      Err = "[uslave] ssh command error code: " ++ integer_to_list(Status),
+      utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
       {error, Err};
     {slavetimeout} ->
       utils:debug(master, "[uslave] connection timed-out after 10s",
