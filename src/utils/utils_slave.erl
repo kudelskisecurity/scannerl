@@ -50,8 +50,8 @@ start_link(Hostname, Name, Portmin, Timeout, Dbg) ->
     {ok, R} ->
       {ok, R};
     error ->
-      utils:debug(master, io_lib:fwrite("[uslave] starting \"~p\" on ~p", [Node, Hostname]),
-        undefined, Dbg),
+      utils:debug(master, io_lib:fwrite("[uslave] starting \"~p\" with ssh on ~p",
+        [Node, Hostname]), undefined, Dbg),
       start_it(Node, Hostname, Name, Portmin, Timeout*?SECTOMS, Dbg)
   end.
 
@@ -80,15 +80,13 @@ ping_it(Node, Dbg) ->
 
 % link it
 setup_slave(Node) ->
-  Old = process_flag(trap_exit, true),
   link(Node),
   % see http://erlang.org/doc/man/erlang.html#process_flag-2
   receive
     % discard that
     _ ->
       ok
-  end,
-  process_flag(trap_exit, Old).
+  end.
 
 % wait until the node is up
 wait_for_node(Node, Port, Timeout, Dbg) ->
@@ -99,6 +97,27 @@ wait_for_node(Node, Port, Timeout, Dbg) ->
 % is up or timeout occurs
 wait_for_it(Node, Port, Ref, Dbg) ->
   receive
+    {'EXIT', Port, normal} ->
+      % ignore noerr from port
+      utils:debug(master, "[uslave] ssh command succeeded",
+        undefined, Dbg),
+      wait_for_it(Node, Port, Ref, Dbg);
+    {'EXIT', Port, Reason} ->
+      % port communication threw an error
+      Err = io_lib:fwrite("uslave] ssh communication failed: ~p", [Reason]),
+      utils:debug(master, Err, undefined, Dbg),
+      {error, list_to_atom};
+    {Port, {exit_status, 0}} ->
+      % port status is ok
+      utils:debug(master, "[uslave] ssh command returned 0",
+        undefined, Dbg),
+      wait_for_it(Node, Port, Ref, Dbg);
+    {Port, {exit_status, Status}} ->
+      % port exit status != 0
+      Err = "SSH error code: " ++ integer_to_list(Status),
+      utils:debug(master, "[uslave] ssh command returned error",
+        undefined, Dbg),
+      {error, Err};
     {slavetimeout} ->
       utils:debug(master, "[uslave] connection timed-out after 10s",
         undefined, Dbg),
@@ -118,10 +137,13 @@ wait_for_it(Node, Port, Ref, Dbg) ->
 % start a remote node
 start_it(Node, Hostname, Name, Portmin, Timeout, Dbg) ->
   Fname = string:join([Name, "@", Hostname], ""),
-  Cmd = string:join([?REMOTE_BIN, Hostname, ?BIN, "-name", Fname,
+  Cmd = string:join([?REMOTE_BIN, Hostname, ?BIN, "-sname", Fname,
     ?ARGS, ?TCPPORT, integer_to_list(Portmin), ?CONNARGS], " "),
   utils:debug(master, io_lib:fwrite("[uslave] remote command: ~p", [Cmd]),
     undefined, Dbg),
-  Port = open_port({spawn, Cmd}, [stream]),
-  wait_for_node(Node, Port, Timeout, Dbg).
+  Old = process_flag(trap_exit, true),
+  Port = open_port({spawn, Cmd}, [stream, exit_status]),
+  Ret = wait_for_node(Node, Port, Timeout, Dbg),
+  process_flag(trap_exit, Old),
+  Ret.
 
