@@ -98,7 +98,7 @@ wait_for_node(Node, Port, Timeout, Dbg) ->
 wait_for_it(Node, Port, Ref, Dbg) ->
   receive
     {'EXIT', Port, normal} ->
-      % ignore noerr from port
+      % ignore no err from port
       utils:debug(master, "[uslave] ssh command succeeded",
         undefined, Dbg),
       wait_for_it(Node, Port, Ref, Dbg);
@@ -114,12 +114,13 @@ wait_for_it(Node, Port, Ref, Dbg) ->
       wait_for_it(Node, Port, Ref, Dbg);
     {Port, {exit_status, Status}} ->
       % port exit status != 0
-      Err = "[uslave] ssh command error code: " ++ integer_to_list(Status),
+      Err = "ssh command error code: " ++ integer_to_list(Status),
       utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
       {error, Err};
     {slavetimeout} ->
-      utils:debug(master, "[uslave] connection timed-out after 10s",
-        undefined, Dbg),
+      % timeout occurs
+      Err = "connection timed-out after" ++ integer_to_list(?TIMEOUT) ++ "s",
+      utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
       {error, timeout}
   after
     ?POKE ->
