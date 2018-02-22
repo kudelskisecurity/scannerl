@@ -97,6 +97,10 @@ Scannerl is available on aur for arch linux users
 * [scannerl](https://aur.archlinux.org/packages/scannerl/)
 * [scannerl-git](https://aur.archlinux.org/packages/scannerl-git/)
 
+DEBs (Ubuntu, Debian) are available in the [releases](https://github.com/kudelskisecurity/scannerl/releases).
+
+RPMs (Opensuse, Centos, Redhat) are available under https://build.opensuse.org/package/show/home:chapeaurouge/scannerl.
+
 ## Distributed setup
 
 Two types of nodes are needed to perform a distributed scan:
