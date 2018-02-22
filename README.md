@@ -66,7 +66,9 @@ See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
 
 # Installation
 
-First install Erlang (at least v.18) by choosing the right packaging for your
+See the different installation options under [wiki installation page](https://github.com/kudelskisecurity/scannerl/wiki/Installation)
+
+To install from source, first install Erlang (at least v.18) by choosing the right packaging for your
 platform: [Erlang downloads](https://www.erlang-solutions.com/resources/download.html)
 
 Install the required packages:
@@ -75,7 +77,7 @@ Install the required packages:
 $ sudo apt install erlang erlang-src rebar
 
 # on arch
-sudo pacman -S erlang-nox rebar
+$ sudo pacman -S erlang-nox rebar
 ```
 
 Then build scannerl:
@@ -92,11 +94,8 @@ $ ./scannerl -h
 ```
 
 Scannerl is available on aur for arch linux users
-```bash
-$ yaourt -S scannerl
-```
-
-For other installation options see the [wiki installation page](https://github.com/kudelskisecurity/scannerl/wiki/Installation)
+* [scannerl](https://aur.archlinux.org/packages/scannerl/)
+* [scannerl-git](https://aur.archlinux.org/packages/scannerl-git/)
 
 ## Distributed setup
 
