@@ -194,8 +194,13 @@ get_privports(_) ->
 
 %% provide the socket option
 get_options(Args) ->
-  {Opts, Retry} = parse_ssl_opts(Args#args.fsmopts, Args#args.ctarget, [], #retry{}),
+  {Opts1, Retry0} = parse_ssl_opts(Args#args.fsmopts, Args#args.ctarget, [], #retry{}),
+  {Opts2, Retry} = parse_ssl_opts(Args#args.sockopt, Args#args.ctarget, [], Retry0),
+  Opts = utils:merge_sockopt(Opts1, Opts2),
   Ret = ?COPTS ++ get_privports(Args#args.privports) ++ Opts,
+  debug(Args, io_lib:fwrite("SSL options retry-sni:~p retry-ssl:~p",
+                            [Retry#retry.sni, Retry#retry.sslcheck])),
+  debug(Args, io_lib:fwrite("SSL options: ~p", [Ret])),
   {Ret, Retry}.
 
 %% send data
