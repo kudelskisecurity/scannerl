@@ -1,6 +1,7 @@
 # Scannerl
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+[![AUR](https://img.shields.io/aur/version/scannerl.svg)](https://aur.archlinux.org/packages/scannerl)
 
 [Scannerl](https://github.com/kudelskisecurity/scannerl) is a modular distributed fingerprinting engine
 implemented by [Kudelski Security](https://www.kudelskisecurity.com/).
