@@ -15,6 +15,7 @@
     % -------------------------------------------------------------------
     port,           % [optional] port to fingerprint
     timeout,        % [optional] fp module timeout in ms
+    stimeout,       % [optional] slave connection timeout in ms
     maxpkt,         % [optional] fp module maxpkt
     checkwww,       % [optional] dns will try to query www.target
     output,         % [optional] list of output modules to use

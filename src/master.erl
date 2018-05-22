@@ -7,7 +7,6 @@
 -include("includes/opts.hrl").
 
 -define(CHECKTO, 3000). % ms
--define(MAXWAIT, 20000). % ms
 -define(ENDTO, 10000). % ms
 -define(ERLEXT, ".erl").
 % that's the range start for TCP communication
@@ -26,7 +25,7 @@ rem_load_modules(Node, [M|Rest]) ->
   rpc:call(Node, erlang, load_module, [Mod, Bin]),
   rem_load_modules(Node, Rest).
 
-wait_for_slave(Tot, Cnt, Cntlist, _Mods, _Nosafe) when Cnt == Tot ->
+wait_for_slave(Tot, Cnt, Cntlist, _Mods, _Nosafe, _Timeout) when Cnt == Tot ->
   case cntlist:count(Cntlist) of
     0 ->
       print(error, "no viable host found"),
@@ -34,7 +33,7 @@ wait_for_slave(Tot, Cnt, Cntlist, _Mods, _Nosafe) when Cnt == Tot ->
     _ ->
       {ok, Cntlist}
   end;
-wait_for_slave(Tot, Cnt, Cntlist, Modules, Nosafe) ->
+wait_for_slave(Tot, Cnt, Cntlist, Modules, Nosafe, Timeout) ->
   receive
     {ok, Node, H, _Name} ->
       net_kernel:connect_node(Node),
@@ -45,35 +44,35 @@ wait_for_slave(Tot, Cnt, Cntlist, Modules, Nosafe) ->
       rpc:call(Node, global, register_name,
         [scannerl, global:whereis_name(scannerl)]),
       New = cntlist:update_key(Cntlist, H, Node),
-      wait_for_slave(Tot, Cnt+1, New, Modules, Nosafe);
+      wait_for_slave(Tot, Cnt+1, New, Modules, Nosafe, Timeout);
     {error, Reason, H, Name} when Nosafe ->
       print(warning, io_lib:fwrite("host ~p (name:~p) failed to start: ~p - continue ...",
         [H, Name, Reason])),
       New = cntlist:remove_key(Cntlist, H),
-      wait_for_slave(Tot, Cnt+1, New, Modules, Nosafe);
+      wait_for_slave(Tot, Cnt+1, New, Modules, Nosafe, Timeout);
     {error, Reason, H, Name} ->
       print(error, io_lib:fwrite("unable to start host ~p (name:~p): ~p",
         [H, Name, Reason])),
       {error, Cntlist}
   after
-    ?MAXWAIT ->
+    Timeout ->
       print(error, io_lib:fwrite("max timeout (~ps) reached when waiting for slaves (got ~p/~p)",
-        [?MAXWAIT / 1000, Cnt, Tot])),
+        [Timeout / 1000, Cnt, Tot])),
       {error, Cntlist}
   end.
 
 % start a list of slave
-start_slave_th([], Mods, Tot, Slaves, _Basename, Nosafe, _Dbg) ->
-  wait_for_slave(Tot, 0, Slaves, Mods, Nosafe);
-start_slave_th([H|T], Modules, Cnt, Slaves, Basename, Nosafe, Dbg) ->
+start_slave_th([], Mods, Tot, Slaves, _Basename, Nosafe, _Dbg, Timeout) ->
+  wait_for_slave(Tot, 0, Slaves, Mods, Nosafe, 2*Timeout);
+start_slave_th([H|T], Modules, Cnt, Slaves, Basename, Nosafe, Dbg, Timeout) ->
   Name = lists:concat([Basename, "-slave-", integer_to_list(Cnt)]),
-  spawn_link(utils_slave, start_link_th, [H, Name, ?PORTMIN, Dbg, self()]),
-  start_slave_th(T, Modules, Cnt+1, Slaves, Basename, Nosafe, Dbg).
+  spawn_link(utils_slave, start_link_th, [H, Name, ?PORTMIN, Dbg, self(), Timeout]),
+  start_slave_th(T, Modules, Cnt+1, Slaves, Basename, Nosafe, Dbg, Timeout).
 
 % start all slave nodes using process
-start_slaves(Slaves, Modules, Basename, Nosafe, Dbg) ->
+start_slaves(Slaves, Modules, Basename, Nosafe, Dbg, Timeout) ->
   start_slave_th(cntlist:flattenkeys(Slaves), Modules, 0, Slaves,
-    Basename, Nosafe, Dbg).
+    Basename, Nosafe, Dbg, Timeout).
 
 % stop all slave nodes
 stop_slaves([], _Dbg) ->
@@ -426,7 +425,9 @@ master(Opts) ->
       print(us, io_lib:fwrite("max process per node: ~p", [Nb]))
   end,
 
-  {Ret, Nodes} = start_slaves(Slaves, Opts#opts.slmodule, Id, Opts#opts.nosafe, Opts#opts.debugval),
+  {Ret, Nodes} = start_slaves(Slaves, Opts#opts.slmodule,
+                              Id, Opts#opts.nosafe, Opts#opts.debugval,
+                              Opts#opts.stimeout),
   print(us, io_lib:fwrite("slave's node(s) started in: ~2..0w:~2..0w:~2..0w",
     duration(SlaveTimestamp))),
   % update total number of slave

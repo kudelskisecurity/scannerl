@@ -11,37 +11,37 @@
 -module(utils_slave).
 -author("Adrien Giner - adrien.giner@kudelskisecurity.com").
 
--export([start_link/4, start_link/5, stop/2]).
--export([start_link_th/5]).
+-export([start_link/5, stop/2]).
+-export([start_link_th/6]).
 
 -define(BIN, "erl").
 -define(REMOTE_BIN, "ssh -q -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no").
 -define(CONNARGS, "-detached -noinput").
 -define(TCPPORT, "-kernel inet_dist_listen_min").
 -define(ARGS, "-hidden +K true -smp enable -P 134217727 -connect_all false -kernel dist_nodelay false").
--define(TIMEOUT, 10). % seconds
--define(POKE, 500). % poke every N ms
--define(SECTOMS, 1000).
+-define(POKE, 250). % poke every N ms
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-start_link_th(Hostname, Name, Portmin, Dbg, Parent) ->
-  {Ret, Node} = start_link(Hostname, Name, Portmin, ?TIMEOUT, Dbg),
+% start a slave
+% @Hostname: the hostname (must resolve)
+% @Name: the name given to the node
+% @Portmin: TCP port to open for the communication (through firewall)
+% @Dbg: debugger flag
+% @Parent: to whom to report result
+% @Timeout: how long to wait (in ms)
+start_link_th(Hostname, Name, Portmin, Dbg, Parent, Timeout) ->
+  {Ret, Node} = start_link(Hostname, Name, Portmin, Timeout, Dbg),
   Parent ! {Ret, Node, Hostname, Name}.
 
 % start a slave
 % @Hostname: the hostname (must resolve)
 % @Name: the name given to the node
 % @Portmin: TCP port to open for the communication (through firewall)
-start_link(Hostname, Name, Portmin, Dbg) ->
-  start_link(Hostname, Name, Portmin, ?TIMEOUT, Dbg).
-
-% start a slave
-% @Hostname: the hostname (must resolve)
-% @Name: the name given to the node
-% @Timeout: how long to wait (in seconds)
-% @Portmin: TCP port to open for the communication (through firewall)
+% @Dbg: debugger flag
+% @Parent: to whom to report result
+% @Timeout: how long to wait (in ms)
 start_link(Hostname, Name, Portmin, Timeout, Dbg) ->
   Node = list_to_atom(lists:concat([Name, "@", Hostname])),
   utils:debug(master, io_lib:fwrite("[uslave] connecting to \"~p\"", [Node]),
@@ -52,7 +52,7 @@ start_link(Hostname, Name, Portmin, Timeout, Dbg) ->
     error ->
       utils:debug(master, io_lib:fwrite("[uslave] starting \"~p\" with ssh on ~p",
         [Node, Hostname]), undefined, Dbg),
-      start_it(Node, Hostname, Name, Portmin, Timeout*?SECTOMS, Dbg)
+      start_it(Node, Hostname, Name, Portmin, Timeout, Dbg)
   end.
 
 % stop remote node
@@ -91,17 +91,17 @@ setup_slave(Node) ->
 % wait until the node is up
 wait_for_node(Node, Port, Timeout, Dbg) ->
   {ok, Ref} = timer:send_after(Timeout, {slavetimeout}),
-  wait_for_it(Node, Port, Ref, Dbg).
+  wait_for_it(Node, Port, Ref, Dbg, Timeout).
 
 % try to ping every ?POKE until node
 % is up or timeout occurs
-wait_for_it(Node, Port, Ref, Dbg) ->
+wait_for_it(Node, Port, Ref, Dbg, Timeout) ->
   receive
     {'EXIT', Port, normal} ->
       % ignore no err from port
       utils:debug(master, "[uslave] ssh command succeeded",
         undefined, Dbg),
-      wait_for_it(Node, Port, Ref, Dbg);
+      wait_for_it(Node, Port, Ref, Dbg, Timeout);
     {'EXIT', Port, Reason} ->
       % port communication threw an error
       Err = io_lib:fwrite("ssh communication failed: ~p", [Reason]),
@@ -111,7 +111,7 @@ wait_for_it(Node, Port, Ref, Dbg) ->
       % port status is ok
       utils:debug(master, "[uslave] ssh command returned 0",
         undefined, Dbg),
-      wait_for_it(Node, Port, Ref, Dbg);
+      wait_for_it(Node, Port, Ref, Dbg, Timeout);
     {Port, {exit_status, Status}} ->
       % port exit status != 0
       Err = "ssh command error code: " ++ integer_to_list(Status),
@@ -119,7 +119,7 @@ wait_for_it(Node, Port, Ref, Dbg) ->
       {error, Err};
     {slavetimeout} ->
       % timeout occurs
-      Err = "connection timed-out after" ++ integer_to_list(?TIMEOUT) ++ "s",
+      Err = "connection timed-out after" ++ integer_to_list(Timeout/1000) ++ "s",
       utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
       {error, timeout}
   after
@@ -130,7 +130,7 @@ wait_for_it(Node, Port, Ref, Dbg) ->
           setup_slave(Port),
           {ok, N};
         error ->
-          wait_for_it(Node, Port, Ref, Dbg)
+          wait_for_it(Node, Port, Ref, Dbg, Timeout)
       end
   end.
 

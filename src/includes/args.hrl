@@ -22,6 +22,7 @@
     % ----------------------------------------------------------------------
     type,            % fsm type (tcp, udp, ssl, ...)
     timeout=3000,    % [optional] fp module timeout in ms
+    stimeout=10000,  % [optional] slave connection timeout in ms
     maxpkt=infinity, % [optional] max packet to receive
     dependencies=[], % [optional] of modules needed by the module to work
     % ----------------------------------------------------------------------

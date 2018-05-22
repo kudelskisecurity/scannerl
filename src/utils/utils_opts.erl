@@ -1,8 +1,7 @@
 %% utils to handle and parse the options
 %% provided either through the CLI or through a config file
 %%
-%% format of the config file is one option (see usage)
-%% per line
+%% format of the config file is one option (see usage) per line
 %% empty lines and lines starting with # or % are ignored
 
 -module(utils_opts).
@@ -43,7 +42,7 @@
 
 -define(ACCEPTED_ARGS, ["m", "f", "F", "d", "D", "s", "S", "o", "p", "t", "r",
   "c", "M", "P", "Q", "C", "O", "v", "l", "V", "X", "N", "x", "b", "w", "j",
-  "h", "K", "A"]).
+  "h", "K", "A", "T"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Banner
@@ -93,6 +92,7 @@ usage() ->
   print("    -o <mod> --output <mod>     comma separated list of output module(s) to use."),
   print("    -p <port> --port <port>     the port to fingerprint."),
   print("    -t <sec> --timeout <sec>    the fingerprinting process timeout."),
+  print("    -T <sec> --stimeout <sec>   slave connection timeout (default: 10)."),
   print("    -j <nb> --max-pkt <nb>      max pkt to receive (int or \"infinity\")."),
   print("    -r <nb> --retry <nb>        retry counter (default: 0)."),
   print("    -c <cidr> --prefix <cidr>   sub-divide range with prefix > cidr (default: 24)."),
@@ -175,27 +175,28 @@ print_modules([H|Modules], Type) ->
 opt_print(Opt) ->
   utils:debug(scannerl, "", {}, Opt#opts.debugval),
   utils:debug(scannerl, "-------------------------------------", {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Module:      ~p", [Opt#opts.module]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Modarg:      ~p", [Opt#opts.modarg]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Target:      ~p", [Opt#opts.target]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Target-file: ~p", [Opt#opts.targetfile]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Domain:      ~p", [Opt#opts.domain]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Domain-file: ~p", [Opt#opts.domainfile]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Slave:       ~p", [Opt#opts.slave]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Slave-file:  ~p", [Opt#opts.slavefile]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Port:        ~p", [Opt#opts.port]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Timeout:     ~p", [Opt#opts.timeout]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Maxpkt:      ~p", [Opt#opts.maxpkt]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Retry:       ~p", [Opt#opts.retry]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Outmode:     ~p", [Opt#opts.outmode]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Out:         ~p", [Opt#opts.output]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Max proc:    ~p", [Opt#opts.maxchild]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Minrange:    ~p", [Opt#opts.minrange]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Dry:         ~p", [Opt#opts.dry]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Nosafe:      ~p", [Opt#opts.nosafe]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Privports:   ~p", [Opt#opts.privports]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Sockopt:     ~p", [Opt#opts.sockopt]), {}, Opt#opts.debugval),
-  utils:debug(scannerl, io_lib:fwrite("Debug:       ~p", [Opt#opts.debugval#debugval.value]),
+  utils:debug(scannerl, io_lib:fwrite("Module:        ~p", [Opt#opts.module]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Modarg:        ~p", [Opt#opts.modarg]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Target:        ~p", [Opt#opts.target]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Target-file:   ~p", [Opt#opts.targetfile]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Domain:        ~p", [Opt#opts.domain]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Domain-file:   ~p", [Opt#opts.domainfile]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Slave:         ~p", [Opt#opts.slave]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Slave-file:    ~p", [Opt#opts.slavefile]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Port:          ~p", [Opt#opts.port]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Timeout:       ~p", [Opt#opts.timeout]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Slave Timeout: ~p", [Opt#opts.stimeout]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Maxpkt:        ~p", [Opt#opts.maxpkt]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Retry:         ~p", [Opt#opts.retry]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Outmode:       ~p", [Opt#opts.outmode]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Out:           ~p", [Opt#opts.output]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Max proc:      ~p", [Opt#opts.maxchild]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Minrange:      ~p", [Opt#opts.minrange]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Dry:           ~p", [Opt#opts.dry]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Nosafe:        ~p", [Opt#opts.nosafe]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Privports:     ~p", [Opt#opts.privports]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Sockopt:       ~p", [Opt#opts.sockopt]), {}, Opt#opts.debugval),
+  utils:debug(scannerl, io_lib:fwrite("Debug:         ~p", [Opt#opts.debugval#debugval.value]),
     {}, Opt#opts.debugval),
   utils:debug(scannerl, io_lib:fwrite("Config file: ~p", [Opt#opts.config]), {}, Opt#opts.debugval),
   utils:debug(scannerl, "-------------------------------------", {}, Opt#opts.debugval),
@@ -361,6 +362,7 @@ optfill(Map, Mods, Version) ->
     slavefile=maps:get("S", Map, nil),
     port=opt_get_integer(maps:get("p", Map, integer_to_list(Args#args.port))),
     timeout=opt_get_integer(maps:get("t", Map, integer_to_list(Args#args.timeout))),
+    stimeout=opt_get_integer(maps:get("T", Map, integer_to_list(Args#args.stimeout))),
     maxpkt=maps:get("j", Map, Args#args.maxpkt),
     checkwww=opt_get_boolean(maps:get("w", Map, "false")),
     retry=opt_get_integer(maps:get("r", Map, "0")),
@@ -566,6 +568,8 @@ add_opt("D"=Key, Value, Map) ->
   maps:put(Key, add_file_to_list(Elems, []), Map);
 add_opt("t"=Key, Value, Map) ->
   maps:put(Key, integer_to_list(1000*opt_get_integer(Value)), Map);
+add_opt("T"=Key, Value, Map) ->
+  maps:put(Key, integer_to_list(1000*opt_get_integer(Value)), Map);
 add_opt("j"=Key, Value, Map) ->
   case string:equal(Value, ?INFINITY) of
     true ->
@@ -603,6 +607,8 @@ add_opt("-port", Value, Map) ->
   add_opt("p", Value, Map);
 add_opt("-timeout", Value, Map) ->
   add_opt("t", Value, Map);
+add_opt("-stimeout", Value, Map) ->
+  add_opt("T", Value, Map);
 add_opt("-prefix", Value, Map) ->
   add_opt("c", Value, Map);
 add_opt("-retry", Value, Map) ->
