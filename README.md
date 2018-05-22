@@ -131,7 +131,6 @@ $ ./scannerl -h
    ___) | |___ / ___ \| |\  | |\  | |___|  _ <| |___
   |____/ \____/_/   \_\_| \_|_| \_|_____|_| \_\_____|
 
-
 USAGE
   scannerl MODULE TARGETS [NODES] [OPTIONS]
 
@@ -161,6 +160,7 @@ USAGE
     -o <mod> --output <mod>     comma separated list of output module(s) to use.
     -p <port> --port <port>     the port to fingerprint.
     -t <sec> --timeout <sec>    the fingerprinting process timeout.
+    -T <sec> --stimeout <sec>   slave connection timeout (default: 10).
     -j <nb> --max-pkt <nb>      max pkt to receive (int or "infinity").
     -r <nb> --retry <nb>        retry counter (default: 0).
     -c <cidr> --prefix <cidr>   sub-divide range with prefix > cidr (default: 24).
@@ -179,7 +179,6 @@ USAGE
     -w --www                    DNS will try for www.<domain>.
     -b --progress               show progress.
     -x --dryrun                 dry run.
-
 ```
 
 See the [wiki](https://github.com/kudelskisecurity/scannerl/wiki) for more.
