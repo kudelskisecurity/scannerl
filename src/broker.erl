@@ -153,12 +153,6 @@ send_msg(Id, Type, Msg) ->
   Dummy = io_lib:format("~s", [Msg]),
   global:whereis_name(master) ! {Type, node(), Id, Dummy}.
 
-% set hardtimeout timer
-set_hardtimeout(0) ->
-  ok;
-set_hardtimeout(Hardtimeout) ->
-  {ok, _} = timer:send_after(Hardtimeout, {hardtimeout}).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % communication
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,12 +223,6 @@ process_msg(Obj, Msg) ->
       % master message to cancel
       send_msg(Obj#obj.id, info, "cancel received"),
       utils:debug(broker, "cancel received from master", {Obj#obj.id}, Obj#obj.debugval),
-      kill_children(Obj#obj.id),
-      rcv_loop(Obj#obj{cancel=true});
-    {hardtimeout} ->
-      % self message to stop everything
-      utils:debug(broker, "hard timeout !", {Obj#obj.id}, Obj#obj.debugval),
-      send_msg(Obj#obj.id, hardtimeout, []),
       kill_children(Obj#obj.id),
       rcv_loop(Obj#obj{cancel=true});
     {progress} ->
@@ -329,7 +317,6 @@ scan(Opts) ->
         debugval=Opts#opts.debugval, id=Opts#opts.user, tcnt=0, maxchild=Opts#opts.maxchild,
         parent=Parent, outputs=Outputs, outbuf=[], outbufsz=Opts#opts.outmode},
       start_supervisor(Opts#opts.module, Opts#opts.user),
-      set_hardtimeout(Opts#opts.hardtimeout),
       utils:debug(broker, "start listening for message from master/slave",
         {Obj#obj.id}, Obj#obj.debugval),
       % start listening for message (from master mostly)

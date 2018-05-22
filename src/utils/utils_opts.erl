@@ -34,7 +34,6 @@
 -define(LIST_SPACING, 18).
 
 % default option
--define(HARDTIMEOUT, "0").
 -define(DEFOUTPUT, [{out_stdout, []}]).
 -define(MINRANGE, "24").
 -define(DEFPROCESS, "28232").
@@ -364,7 +363,6 @@ optfill(Map, Mods, Version) ->
     timeout=opt_get_integer(maps:get("t", Map, integer_to_list(Args#args.timeout))),
     maxpkt=maps:get("j", Map, Args#args.maxpkt),
     checkwww=opt_get_boolean(maps:get("w", Map, "false")),
-    hardtimeout=opt_get_integer(maps:get("k", Map, ?HARDTIMEOUT)),
     retry=opt_get_integer(maps:get("r", Map, "0")),
     outmode=opt_get_integer(maps:get("O", Map, "0")),
     output=maps:get("o", Map, ?DEFOUTPUT),
@@ -378,7 +376,7 @@ optfill(Map, Mods, Version) ->
     nosafe=opt_get_boolean(maps:get("N", Map, "false")),
     privports=opt_get_boolean(maps:get("X", Map, "false")),
     sockopt=maps:get("K", Map, []),
-    config=maps:get("k", Map, nil),
+    config=maps:get("C", Map, nil),
     msg_port=opt_get_integer(maps:get("M", Map, ?DEFPORT)),
     % other options
     fsmopts=Args#args.fsmopts,
@@ -575,8 +573,6 @@ add_opt("j"=Key, Value, Map) ->
     false ->
       maps:put(Key, opt_get_integer(Value), Map)
   end;
-add_opt("k"=Key, Value, Map) ->
-  maps:put(Key, integer_to_list(1000*opt_get_integer(Value)), Map);
 add_opt("K"=Key, Value, Map) ->
   Entries = string:tokens(Value, ?ARGSEP),
   maps:put(Key, keyval_to_tuple(Entries, []), Map);
@@ -607,8 +603,6 @@ add_opt("-port", Value, Map) ->
   add_opt("p", Value, Map);
 add_opt("-timeout", Value, Map) ->
   add_opt("t", Value, Map);
-add_opt("-ktimeout", Value, Map) ->
-  add_opt("k", Value, Map);
 add_opt("-prefix", Value, Map) ->
   add_opt("c", Value, Map);
 add_opt("-retry", Value, Map) ->
