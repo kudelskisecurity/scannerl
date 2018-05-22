@@ -4,10 +4,8 @@
 
 [Scannerl](https://github.com/kudelskisecurity/scannerl) is a modular distributed fingerprinting engine
 implemented by [Kudelski Security](https://www.kudelskisecurity.com/).
-Scannerl can fingerprint
-thousands of targets on a single host, but can just as easily be distributed
-across multiple hosts.
-Scannerl is to fingerprinting what zmap is to port scanning.
+Scannerl can fingerprint thousands of targets on a single host, but can just as easily be distributed
+across multiple hosts. Scannerl is to fingerprinting what zmap is to port scanning.
 
 Scannerl works on Debian/Ubuntu/Arch (but will probably work on
 other distributions as well). It uses a master/slave architecture where
@@ -131,7 +129,7 @@ $ ./scannerl -h
   \___ \| |     / _ \ |  \| |  \| |  _| | |_) | |
    ___) | |___ / ___ \| |\  | |\  | |___|  _ <| |___
   |____/ \____/_/   \_\_| \_|_| \_|_____|_| \_\_____|
-                                                   
+
 
 USAGE
   scannerl MODULE TARGETS [NODES] [OPTIONS]
@@ -237,6 +235,7 @@ chargen            UDP/19: Chargen amplification factor identification
 fox                TCP/1911: FOX identification
 httpbg             TCP/80: HTTP Server header identification
                      - Arg1: [true|false] follow redirection [Default:false]
+httpsbg            SSL/443: HTTPS Server header identification
 modbus             TCP/502: Modbus identification
 mqtt               TCP/1883: MQTT identification
 mqtts              TCP/8883: MQTT over SSL identification
@@ -259,7 +258,6 @@ file_resultonly    output to file (only result)
 stdout             output to stdout
 stdout_ip          output to stdout (only IP)
 stdout_mini        output to stdout (only ip and result)
-
 ```
 
 ## Modules arguments
