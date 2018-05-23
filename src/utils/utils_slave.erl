@@ -119,7 +119,7 @@ wait_for_it(Node, Port, Ref, Dbg, Timeout) ->
       {error, Err};
     {slavetimeout} ->
       % timeout occurs
-      Err = "connection timed-out after" ++ integer_to_list(Timeout/1000) ++ "s",
+      Err = "connection timed-out after" ++ integer_to_list(round(Timeout/1000)) ++ "s",
       utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
       {error, timeout}
   after
