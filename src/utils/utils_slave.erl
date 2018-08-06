@@ -119,9 +119,9 @@ wait_for_it(Node, Port, Ref, Dbg, Timeout) ->
       {error, Err};
     {slavetimeout} ->
       % timeout occurs
-      Err = "connection timed-out after" ++ integer_to_list(round(Timeout/1000)) ++ "s",
+      Err = "SSH connection timed-out after " ++ integer_to_list(round(Timeout/1000)) ++ "s",
       utils:debug(master, "[uslave] " ++ Err, undefined, Dbg),
-      {error, timeout}
+      {error, Err}
   after
     ?POKE ->
       case ping_it(Node, Dbg) of
@@ -139,7 +139,7 @@ start_it(Node, Hostname, Name, Portmin, Timeout, Dbg) ->
   Fname = string:join([Name, "@", Hostname], ""),
   Cmd = string:join([?REMOTE_BIN, Hostname, ?BIN, "-sname", Fname,
     ?ARGS, ?TCPPORT, integer_to_list(Portmin), ?CONNARGS], " "),
-  utils:debug(master, io_lib:fwrite("[uslave] remote command: ~p", [Cmd]),
+  utils:debug(master, io_lib:fwrite("[uslave] SSH command: ~p", [Cmd]),
     undefined, Dbg),
   Old = process_flag(trap_exit, true),
   Port = open_port({spawn, Cmd}, [stream, exit_status]),
