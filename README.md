@@ -236,10 +236,15 @@ fox                TCP/1911: FOX identification
 httpbg             TCP/80: HTTP Server header identification
                      - Arg1: [true|false] follow redirection [Default:false]
 httpsbg            SSL/443: HTTPS Server header identification
+https_certif       SSL/443: HTTPS certificate graber
+imap_certif        TCP/143: IMAP STARTTLS certificate graber
 modbus             TCP/502: Modbus identification
 mqtt               TCP/1883: MQTT identification
 mqtts              TCP/8883: MQTT over SSL identification
 mysql_greeting     TCP/3306: Mysql version identification
+pop3_certif        TCP/110: POP3 STARTTLS certificate graber
+smtp_certif        TCP/25: SMTP STARTTLS certificate graber
+ssh_host_key       TCP/22: SSH host key graber
 
 Output modules available
 ========================
@@ -254,7 +259,9 @@ file               output to file
 file_ip            output to stdout (only ip)
                      - Arg1: File path
 file_mini          output to file (only ip and result)
+                     - Arg1: File path
 file_resultonly    output to file (only result)
+                     - Arg1: File path
 stdout             output to stdout
 stdout_ip          output to stdout (only IP)
 stdout_mini        output to stdout (only ip and result)
