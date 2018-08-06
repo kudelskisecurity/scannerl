@@ -24,7 +24,7 @@
 %% returns {ok, Obj} or {error, Reason}
 init(_Scaninfo, [Saveall]) ->
   {ok, #opt{saveall=list_to_atom(Saveall)}};
-init(_Sacninfo, _) ->
+init(_Scaninfo, _) ->
   {error, ?ERR_ARG}.
 
 %% this is the cleaning interface for this module

@@ -3,6 +3,7 @@
 -module(out_file_ip).
 -behavior(out_behavior).
 -author("David Rossier - david.rossier@kudelskisecurity.com").
+-author("Adrien Giner - adrien.giner@kudelskisecurity.com").
 
 -export([init/2, clean/1, output/2]).
 -export([get_description/0]).
@@ -19,8 +20,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this is the initialization interface for this module
 %% returns {ok, Obj} or {error, Reason}
-init(_Scaninfo, []) ->
-  {error, ?ERR_ARG};
 init(_Scaninfo, [Path]) ->
   case file:open(Path, [write, delayed_write, {encoding, utf8}]) of
     {ok, Fd} ->
@@ -28,7 +27,9 @@ init(_Scaninfo, [Path]) ->
       {ok, Opts};
     {error, Reason} ->
       {error, Reason}
-  end.
+  end;
+init(_Scaninfo, _) ->
+  {error, ?ERR_ARG}.
 
 %% this is the cleaning interface for this module
 %% returns ok or {error, Reason}

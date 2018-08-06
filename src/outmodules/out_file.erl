@@ -37,6 +37,7 @@ clean(Object) ->
 
 get_description() ->
   ?DESCRIPTION.
+
 get_arguments() ->
   ?ARGUMENTS.
 
