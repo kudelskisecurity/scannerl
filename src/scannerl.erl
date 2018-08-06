@@ -54,6 +54,7 @@
     utils_http,
     utils_ssl,
     utils_fox,
+    ssh_key_cb,
     utils_mqtt
   ]).
 -define(SCANNERL, "scannerl").

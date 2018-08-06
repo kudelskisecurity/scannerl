@@ -11,7 +11,9 @@
 -export([
     get_ca_path/0,
     get_opts_verify/1,
-    get_opts_noverify/0
+    get_opts_noverify/0,
+    get_certif/1,
+    upgrade_socket/3
   ]).
 -include_lib("public_key/include/public_key.hrl").
 
@@ -136,3 +138,55 @@ match_wildcard(Against, Left, Right) ->
   Aright = string:right(Against, Lr),
   string:equal(Aleft, Left) and string:equal(Aright, Right).
 
+% return {ok, Cert} with the certificate from an SSL-enabled socket
+% otherwise return {error, Reason} in case of error
+get_certif(Socket) ->
+  try
+    case ssl:peercert(Socket) of
+      {error, Reason} ->
+        {error, [bad_or_no_certificate, Reason]};
+      {ok, Cert} ->
+        C = public_key:pkix_decode_cert(Cert, plain),
+        D = public_key:pem_entry_encode('Certificate', C),
+        E = public_key:pem_encode([D]), {ok, E}
+    end
+  catch
+    %error:{Type, Ex} ->
+    %  %io:fwrite("ex: ~n~p~n", [Ex]),
+    %  {result, {{error, up}, Type}};
+    _Type:Exception ->
+      %io:fwrite("Type: ~n~p~n", [Type]),
+      %io:fwrite("Exception:~n~p~n", [Exception]),
+      {error, [unexpected_data, Exception]}
+  end.
+
+%% upgrade a socket with SSL
+%% returns {ok, NewSocket} or {error, Reason}
+%% Opt can be empty == []
+upgrade_socket(Socket, Opt, Timeout) ->
+  % first ensure the socket is opened
+  case erlang:port_info(Socket) of
+    undefined ->
+      {error, socket_closed};
+    _ ->
+      upgrade_socket_to_ssl(Socket, Opt, Timeout)
+  end.
+
+%% upgrade socket with SSL
+upgrade_socket_to_ssl(Socket, Opt, Timeout) ->
+  case ssl:start() of
+    ok ->
+      % set socket to active false
+      inet:setopts(Socket, [{active, false}]),
+      % upgrade the socket
+      case ssl:connect(Socket, Opt, Timeout) of
+        {ok, TLSSocket} ->
+          {ok, TLSSocket};
+        {ok, TLSSocket, _Ext} ->
+          {ok, TLSSocket};
+        {error, Reason} ->
+          {error, Reason}
+      end;
+    {error, Reason} ->
+      {error, Reason}
+  end.
